@@ -28,7 +28,7 @@ export class Player {
       isPlayer: true
     });
     this.root = this.model.root;
-    this.root.position.set(0, 2, 0); // Spawns in Downtown Plaza
+    this.root.position.set(12, 2.0, 30); // Spawns on Downtown Sidewalk Plaza
     this.scene.add(this.root);
 
     // Physics

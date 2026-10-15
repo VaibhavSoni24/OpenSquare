@@ -148,6 +148,53 @@ export class AssetGenerator {
     return texture;
   }
 
+  // Sidewalk Paver Texture with Tactile Guide Strips
+  getSidewalkTexture() {
+    if (this.textures.sidewalk) return this.textures.sidewalk;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Concrete paving tone
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(0, 0, size, size);
+
+    // Grid paver tiles
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 4;
+    const tileSize = 64;
+    for (let x = 0; x <= size; x += tileSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, size);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= size; y += tileSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(size, y);
+      ctx.stroke();
+    }
+
+    // Yellow tactile paving strip in center (Japanese road standard)
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(size / 2 - 20, 0, 40, size);
+    ctx.strokeStyle = '#ca8a04';
+    ctx.lineWidth = 2;
+    for (let y = 10; y < size; y += 24) {
+      ctx.strokeRect(size / 2 - 16, y, 32, 12);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    this.textures.sidewalk = texture;
+    return texture;
+  }
+
   // 3. Anime Stylized Grass with Painterly Swirls
   getGrassTexture() {
     if (this.textures.grass) return this.textures.grass;
@@ -242,9 +289,19 @@ export class AssetGenerator {
     return texture;
   }
 
-  // 5. High-Rise Anime Commercial Facade Textures
+  getSkyscraperTexture(paletteType = 0) {
+    return this.getFacadeTexture(paletteType);
+  }
+
   getFacadeTexture(paletteType = 0) {
-    const key = `facade_${paletteType}`;
+    let index = 0;
+    if (typeof paletteType === 'number') {
+      index = Math.abs(Math.floor(paletteType));
+    } else if (typeof paletteType === 'string') {
+      const map = { glass: 0, commercial: 1, luxury: 2, cyber: 3 };
+      index = map[paletteType.toLowerCase()] !== undefined ? map[paletteType.toLowerCase()] : 0;
+    }
+    const key = `facade_${index}`;
     if (this.textures[key]) return this.textures[key];
 
     const size = 512;
@@ -259,7 +316,7 @@ export class AssetGenerator {
       { wall: '#1e1b4b', winOn: '#f472b6', winOff: '#0f172a', accent: '#a855f7', brand: 'CYBER CAFE ☕' },
       { wall: '#3f3f46', winOn: '#fef9c3', winOff: '#18181b', accent: '#f59e0b', brand: 'SHIBUYA SOUNDS 🎧' }
     ];
-    const theme = themes[paletteType % themes.length];
+    const theme = themes[index % themes.length] || themes[0];
 
     ctx.fillStyle = theme.wall;
     ctx.fillRect(0, 0, size, size);
@@ -549,6 +606,10 @@ export class AssetGenerator {
   }
 
   // 10. Japanese Police Station ("KOBAN 👮") Facade Texture
+  getPoliceTexture() {
+    return this.getPoliceStationTexture();
+  }
+
   getPoliceStationTexture() {
     if (this.textures.police) return this.textures.police;
 
@@ -822,6 +883,94 @@ export class AssetGenerator {
     ctx.fillText(ad.sub, size / 2, 160);
 
     const texture = new THREE.CanvasTexture(canvas);
+    this.textures[key] = texture;
+    return texture;
+  }
+
+  // 15. Helper Texture Aliases
+  getMartTexture() {
+    return this.getConvenienceStoreTexture();
+  }
+
+  getRamenTexture() {
+    return this.getRamenShopTexture();
+  }
+
+  // 16. Japanese Residential House Wall Texture
+  getHouseWallTexture() {
+    if (this.textures.houseWall) return this.textures.houseWall;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Warm cream stucco
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, size, size);
+
+    // Cedar timber corner posts and baseboard
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(0, 0, size, 16);
+    ctx.fillRect(0, size - 24, size, 24);
+    ctx.fillRect(0, 0, 18, size);
+    ctx.fillRect(size - 18, 0, 18, size);
+
+    // Upper and lower shoji windows
+    [70, 290].forEach(wy => {
+      [50, 300].forEach(wx => {
+        ctx.fillStyle = '#e0f2fe';
+        ctx.fillRect(wx, wy, 160, 130);
+        ctx.strokeStyle = '#451a03';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(wx, wy, 160, 130);
+
+        // Window grid
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(wx + 80, wy);
+        ctx.lineTo(wx + 80, wy + 130);
+        ctx.moveTo(wx, wy + 65);
+        ctx.lineTo(wx + 160, wy + 65);
+        ctx.stroke();
+      });
+    });
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.houseWall = texture;
+    return texture;
+  }
+
+  // 17. Japanese Scalloped Tile Roof Texture
+  getTileRoofTexture(tint = 0x334155) {
+    const key = `tileRoof_${tint}`;
+    if (this.textures[key]) return this.textures[key];
+
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    const hex = typeof tint === 'number' ? '#' + tint.toString(16).padStart(6, '0') : tint;
+    ctx.fillStyle = hex;
+    ctx.fillRect(0, 0, size, size);
+
+    // Scalloped tile curves
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.lineWidth = 3;
+    for (let y = 0; y < size; y += 32) {
+      for (let x = 0; x < size; x += 32) {
+        ctx.beginPath();
+        ctx.arc(x + 16, y, 16, 0, Math.PI);
+        ctx.stroke();
+      }
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
     this.textures[key] = texture;
     return texture;
   }

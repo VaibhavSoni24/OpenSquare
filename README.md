@@ -8,18 +8,19 @@
 
 ## ✨ Features
 
-- 🏝️ **Massive 1800m × 1800m Asymmetric Island Realm**
-  - **Grand Central Roundabout**: A 40m-radius multi-lane traffic circle connecting four 560m grand arterial avenues, with a landscaped fountain courtyard and palm trees.
-  - **Mount Sakura Highlands (Peak y = 35m+)**: Towering mountain slopes lined with evergreen pines, a winding switchback mountain road with red/white cliffside guardrails, and the sacred **Mount Sakura Shinto Shrine (`⛩️ JINJA`)** with grand vermilion Torii gates, granite stone lanterns (`Tōrō`), and a summit observation terrace.
-  - **Emerald Lake & River Channel**: An 80m-radius turquoise lake with weeping willows, arched red wooden bridge, pagoda tea house, and a 26m-wide river channel spanned by a heavy **Japanese Red Steel Arched Truss Bridge**.
-  - **Downtown Financial Core**: Lofty skyscrapers with anime signage, glass skybridges, illuminated storefronts, and broad multi-lane boulevards.
-  - **Civic District**:
-    - 👮 **Metropolitan Police Station (`KOBAN`)**: Cobalt blue and white modern station with emergency sirens, radio antenna mast, and secure parking.
-    - 🏥 **Central Hospital (`+ HOSPITAL`)**: Multi-story medical center with red emergency cross, helipad, and ambulance bays.
-    - 🏦 **OpenSquare Bank (`OPEN BANK`)**: Neoclassical banking headquarters with towering gold columns and vault architecture.
-  - **Shibuya Commercial Plaza**: Japanese cafes with outdoor dining patios and striped sun umbrellas (*Sakura Cafe & Tea ☕*, *Cyber Cafe*), 24H convenience stores (*OpenMart 🏪*), ramen noodle shops (*Ramen Ichiban 🍜*), and street corner beverage vending machines.
-  - **Dense Sakura Residential Old Town**: 60+ cozy Japanese suburban houses and apartment complexes with pitched tile roofs, dormers, balconies, solar panels, air conditioning units, flower gardens, and picket fences.
-  - **Coastal Highway Loop & Sandy Beaches**: 650m-radius coastal highway ring, palm trees, golden sand beaches, marine breakwater boulders, and sea cliffs.
+- 🏝️ **Vast 3400m × 3400m Organic Archipelago Island Realm** (4x Scale Expansion)
+  - **Organic Island Coastline**: Complex natural multi-harmonic coastline with peninsulas, rocky bluffs, fjords, ocean sea cliffs, and golden sandy beaches — replacing simplistic circular maps.
+  - **Knitted Pine Forest & Maritime Lighthouse**: Dense forest of 460+ intertwined evergreen pines leading to high ocean bluffs ($y = 26.5\text{m}$) and the historic clifftop Maritime Lighthouse (`⛵`) with rotating beacon.
+  - **Grand Central Boulevard & Downtown Financial Core**: 24m-wide grand arterial avenue with dual lanes, sidewalks, 30+ detailed modern anime skyscrapers, and illuminated neon facades.
+  - **Grand Lake Bridge ($240\text{m}$ Span)**: Heavy-duty 24m-wide twin-girder bridge spanning the deeply carved Emerald Lake and River Channel, featuring Japanese vermilion arched steel trusses, smooth ramp grading, and solid side safety railings with zero deck collision bugs.
+  - **Mount Sakura Highlands (Peak $y = 50\text{m}$)**: Majestic mountain massif with scenic switchback roads, red & white guardrails, hillside cottages, and the sacred **Mount Sakura Shinto Shrine (`⛩️ JINJA`)** with grand Torii gates, granite stone lanterns (`Tōrō`), and summit observation terrace.
+  - **Civic Center Plaza**:
+    - 👮 **Metropolitan Police Station (`KOBAN`)**: Cobalt blue and white modern station with emergency sirens, radio mast, and patrol bays.
+    - 🏥 **Central Hospital (`+ HOSPITAL`)**: Multi-story medical complex with emergency cross, helipad, and ambulance bays.
+    - 🏦 **OpenSquare Bank (`OPEN BANK`)**: Neoclassical headquarters with gold columns and vault architecture.
+  - **Shibuya Commercial Plaza**: Japanese cafes with outdoor dining patios (*Sakura Cafe & Tea ☕*, *Cyber Cafe*), 24H convenience stores (*OpenMart 🏪*), ramen noodle shops (*Ramen Ichiban 🍜*), and street corner beverage vending machines.
+  - **Dense Sakura Residential Old Town & Mountain Village**: 130+ cozy Japanese houses and cottages with pitched tile roofs, dormers, balconies, solar panels, air conditioning units, flower gardens, and picket fences. Total building count across the realm exceeds 240+ unique structures!
+  - **Emerald Lake Basin & River System**: Deeply carved turquoise freshwater lake with lakeside weeping willows, arched tea-house bridge, and continuous river outlet to the open ocean.
 
 - 🌊 **Realistic Water Physics & Collision System**
   - **Lake & River Water Hazard**: Walking or driving directly over deep water is physically blocked.

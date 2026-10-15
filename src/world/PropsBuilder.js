@@ -23,9 +23,9 @@ export class PropsBuilder {
     this.spawnTrafficSignalPoles();
   }
 
-  // 1. Instanced Modern Anime Street Lights along Avenues, Roundabout & Highway
+  // 1. Instanced Modern Anime Street Lights along Grand Boulevard & Avenues
   spawnStreetLights() {
-    const count = 160;
+    const count = 180;
     const poleGeo = new THREE.CylinderGeometry(0.12, 0.16, 7.5, 8);
     poleGeo.translate(0, 3.75, 0);
 
@@ -42,16 +42,18 @@ export class PropsBuilder {
     const dummy = new THREE.Object3D();
     let idx = 0;
 
-    // A. Roundabout Perimeter Lamps (12 lamps around 40m traffic circle)
+    // A. Roundabout Perimeter Lamps (12 lamps around traffic circle at 0, 40)
     for (let r = 0; r < 12; r++) {
       if (idx >= count) break;
       const ang = (r / 12) * Math.PI * 2;
-      const px = Math.cos(ang) * 44;
-      const pz = Math.sin(ang) * 44;
-      const py = this.terrain.getElevation(px, pz);
+      const px = Math.cos(ang) * 38;
+      const pz = 40 + Math.sin(ang) * 38;
+      // Skip street driving lanes
+      if (Math.abs(px) < 14 || Math.abs(pz - 40) < 14) continue;
 
+      const py = this.terrain.getElevation(px, pz);
       dummy.position.set(px, py, pz);
-      dummy.rotation.y = ang + Math.PI; // Face inward toward road
+      dummy.rotation.y = ang + Math.PI;
       dummy.updateMatrix();
 
       instancedPole.setMatrixAt(idx, dummy.matrix);
@@ -59,66 +61,46 @@ export class PropsBuilder {
       idx++;
     }
 
-    // B. Four Major Arterial Avenues (Length 550m each)
-    const arterialSpacings = [80, 150, 220, 290, 360, 430, 500, 570];
-    arterialSpacings.forEach(d => {
-      // North Avenue (x = 0, z = -d)
-      [-10, 10].forEach(dx => {
+    // B. Grand Central Boulevard (East-West along z = 40)
+    for (let bx = -220; bx <= 520; bx += 45) {
+      if (Math.abs(bx) < 38) continue; // Roundabout area
+      [-11.5, 11.5].forEach(dz => {
         if (idx >= count) return;
-        const px = dx, pz = -d;
-        dummy.position.set(px, this.terrain.getElevation(px, pz), pz);
-        dummy.rotation.y = dx > 0 ? -Math.PI / 2 : Math.PI / 2;
-        dummy.updateMatrix();
-        instancedPole.setMatrixAt(idx, dummy.matrix);
-        instancedHead.setMatrixAt(idx, dummy.matrix);
-        idx++;
-      });
-
-      // South Avenue (x = 0, z = +d)
-      [-10, 10].forEach(dx => {
-        if (idx >= count) return;
-        const px = dx, pz = d;
-        dummy.position.set(px, this.terrain.getElevation(px, pz), pz);
-        dummy.rotation.y = dx > 0 ? -Math.PI / 2 : Math.PI / 2;
-        dummy.updateMatrix();
-        instancedPole.setMatrixAt(idx, dummy.matrix);
-        instancedHead.setMatrixAt(idx, dummy.matrix);
-        idx++;
-      });
-
-      // East Avenue (x = +d, z = 0)
-      [-10, 10].forEach(dz => {
-        if (idx >= count) return;
-        const px = d, pz = dz;
-        dummy.position.set(px, this.terrain.getElevation(px, pz), pz);
+        const px = bx, pz = 40 + dz;
+        const py = this.terrain.getElevation(px, pz);
+        dummy.position.set(px, py, pz);
         dummy.rotation.y = dz > 0 ? Math.PI : 0;
         dummy.updateMatrix();
         instancedPole.setMatrixAt(idx, dummy.matrix);
         instancedHead.setMatrixAt(idx, dummy.matrix);
         idx++;
       });
+    }
 
-      // West Avenue (x = -d, z = 0)
-      [-10, 10].forEach(dz => {
+    // C. Downtown Financial Avenue (North-South along x = 0)
+    for (let bz = -340; bz <= 440; bz += 45) {
+      if (Math.abs(bz - 40) < 38) continue; // Roundabout area
+      [-11.5, 11.5].forEach(dx => {
         if (idx >= count) return;
-        const px = -d, pz = dz;
-        dummy.position.set(px, this.terrain.getElevation(px, pz), pz);
-        dummy.rotation.y = dz > 0 ? Math.PI : 0;
+        const px = dx, pz = bz;
+        const py = this.terrain.getElevation(px, pz);
+        dummy.position.set(px, py, pz);
+        dummy.rotation.y = dx > 0 ? -Math.PI / 2 : Math.PI / 2;
         dummy.updateMatrix();
         instancedPole.setMatrixAt(idx, dummy.matrix);
         instancedHead.setMatrixAt(idx, dummy.matrix);
         idx++;
       });
-    });
+    }
 
-    // C. Downtown Grid Streets
-    const dtAvenues = [-160, -90, -30];
-    dtAvenues.forEach(x => {
-      for (let z = -200; z <= 0; z += 50) {
-        if (Math.hypot(x, z) < 45 || idx >= count) continue;
-        const px = x + 9.5;
-        const pz = z;
-        dummy.position.set(px, this.terrain.getElevation(px, pz), pz);
+    // D. Commercial Grid Streets (x = 120, 240, 380)
+    [120, 240, 380].forEach(gx => {
+      for (let gz = -300; gz <= 0; gz += 60) {
+        if (idx >= count) return;
+        const px = gx + 9.5;
+        const pz = gz;
+        const py = this.terrain.getElevation(px, pz);
+        dummy.position.set(px, py, pz);
         dummy.rotation.y = -Math.PI / 2;
         dummy.updateMatrix();
         instancedPole.setMatrixAt(idx, dummy.matrix);
@@ -151,19 +133,19 @@ export class PropsBuilder {
 
     const lanternGroup = new THREE.Group();
 
-    // Place lanterns along Mount Sakura Torii sacred mountain path
+    // Place lanterns along Mount Sakura Torii sacred mountain path (around x: 650, z: -550)
     const lanternCoords = [
-      { x: 215, z: -385 }, { x: 225, z: -385 },
-      { x: 235, z: -405 }, { x: 245, z: -405 },
-      { x: 255, z: -425 }, { x: 265, z: -425 },
-      { x: 270, z: -440 }, { x: 280, z: -440 },
-      { x: 270, z: -460 }, { x: 280, z: -460 },
-      { x: 265, z: -475 }, { x: 285, z: -475 }
+      { x: 620, z: -520 }, { x: 630, z: -520 },
+      { x: 635, z: -535 }, { x: 645, z: -535 },
+      { x: 640, z: -545 }, { x: 660, z: -545 },
+      { x: 640, z: -560 }, { x: 660, z: -560 },
+      { x: 635, z: -575 }, { x: 665, z: -575 },
+      { x: 645, z: -585 }, { x: 655, z: -585 }
     ];
 
     lanternCoords.forEach(c => {
       const g = new THREE.Group();
-      const y = this.terrain.getElevation(c.x, c.z);
+      const y = 47.0; // Terrace summit
       g.position.set(c.x, y, c.z);
 
       const b = new THREE.Mesh(baseGeo, stoneMat);
@@ -179,9 +161,9 @@ export class PropsBuilder {
     this.scene.add(lanternGroup);
   }
 
-  // 3. Instanced Benches in Central Park & Mountain Scenic Viewpoint
+  // 3. Instanced Benches in Central Park, Lake Promenade & Mountain Viewpoint
   spawnBenches() {
-    const count = 48;
+    const count = 50;
     const benchGeo = new THREE.BoxGeometry(2.4, 0.8, 1.0);
     benchGeo.translate(0, 0.4, 0);
     const benchMat = this.assetGen.createToonMaterial(0x854d0e);
@@ -190,12 +172,14 @@ export class PropsBuilder {
     const dummy = new THREE.Object3D();
     let idx = 0;
 
-    // Around Emerald Lake rim
-    for (let i = 0; i < 28 && idx < count; i++) {
-      const ang = (i / 28) * Math.PI * 2;
-      const x = -330 + Math.cos(ang) * 88;
-      const z = -180 + Math.sin(ang) * 88;
+    // Around Emerald Lake rim (radius 122m around -360, 40)
+    for (let i = 0; i < 30 && idx < count; i++) {
+      const ang = (i / 30) * Math.PI * 2;
+      const x = -360 + Math.cos(ang) * 122;
+      const z = 40 + Math.sin(ang) * 122;
 
+      // Keep bridge clear
+      if (x >= -490 && x <= -230 && Math.abs(z - 40) < 18) continue;
       if (this.terrain.isWater(x, z)) continue;
 
       const y = this.terrain.getElevation(x, z);
@@ -209,14 +193,13 @@ export class PropsBuilder {
 
     // Mount Sakura summit viewpoint
     const summitBenches = [
-      { x: 275, z: -445, rot: 0 },
-      { x: 282, z: -445, rot: 0.3 },
-      { x: 268, z: -445, rot: -0.3 }
+      { x: 655, z: -535, rot: 0 },
+      { x: 662, z: -535, rot: 0.3 },
+      { x: 648, z: -535, rot: -0.3 }
     ];
     summitBenches.forEach(sb => {
       if (idx >= count) return;
-      const y = this.terrain.getElevation(sb.x, sb.z);
-      dummy.position.set(sb.x, y, sb.z);
+      dummy.position.set(sb.x, 47.0, sb.z);
       dummy.rotation.y = sb.rot;
       dummy.updateMatrix();
       instancedBench.setMatrixAt(idx, dummy.matrix);
@@ -230,7 +213,7 @@ export class PropsBuilder {
 
   // 4. Cute Fire Hydrants along sidewalks
   spawnFireHydrants() {
-    const count = 32;
+    const count = 36;
     const hydrantGeo = new THREE.CylinderGeometry(0.25, 0.28, 1.0, 8);
     hydrantGeo.translate(0, 0.5, 0);
     const hydrantMat = this.assetGen.createToonMaterial(0xef4444);
@@ -239,10 +222,8 @@ export class PropsBuilder {
     const dummy = new THREE.Object3D();
 
     for (let i = 0; i < count; i++) {
-      const inter = this.roadNetwork.intersections[i % (this.roadNetwork.intersections.length || 1)];
-      if (!inter) continue;
-      const px = inter.x + 8.5;
-      const pz = inter.z + (i % 2 === 0 ? 8.5 : -8.5);
+      const px = -150 + (i % 6) * 100;
+      const pz = -200 + Math.floor(i / 6) * 80;
       const py = this.terrain.getElevation(px, pz);
 
       dummy.position.set(px, py, pz);
@@ -257,8 +238,11 @@ export class PropsBuilder {
 
   // 5. Traffic Signal Poles at Intersections
   spawnTrafficSignalPoles() {
-    const inters = this.roadNetwork.intersections;
-    if (!inters || inters.length === 0) return;
+    const interPoints = [
+      { x: 0, z: -120 }, { x: 0, z: -240 },
+      { x: 120, z: 40 }, { x: 240, z: 40 }, { x: 380, z: 40 },
+      { x: 120, z: -120 }, { x: 240, z: -120 }, { x: 380, z: -120 }
+    ];
 
     const poleGeo = new THREE.CylinderGeometry(0.15, 0.18, 6.5, 8);
     const armGeo = new THREE.CylinderGeometry(0.12, 0.12, 4.5, 8);
@@ -268,9 +252,10 @@ export class PropsBuilder {
     const metalMat = this.assetGen.createToonMaterial(0x1e293b);
     const signalMat = this.assetGen.createToonMaterial(0x22c55e);
 
-    inters.forEach(inter => {
+    interPoints.forEach(inter => {
+      const y = this.terrain.getElevation(inter.x, inter.z);
       const group = new THREE.Group();
-      group.position.set(inter.x + 8.5, inter.y, inter.z + 8.5);
+      group.position.set(inter.x + 11.5, y, inter.z + 11.5);
 
       const pole = new THREE.Mesh(poleGeo, metalMat);
       pole.position.y = 3.25;

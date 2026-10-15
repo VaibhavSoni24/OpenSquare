@@ -73,7 +73,7 @@ class Game {
       const starterCar = new Vehicle(this.engine.scene, this.assetGen, this.world, {
         type: 'kei',
         color: 0xff5388,
-        position: new THREE.Vector3(8.0, 1.15, -12.0),
+        position: new THREE.Vector3(10.0, 1.95, 26.0),
         rotation: 0
       });
       this.traffic.cars.push({

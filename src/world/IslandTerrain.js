@@ -4,16 +4,18 @@ export class IslandTerrain {
   constructor(scene, assetGen) {
     this.scene = scene;
     this.assetGen = assetGen;
-    this.size = 1800; // Extra-large 1800m x 1800m GTA-scale island
+    this.size = 3400; // Extra-large 3400m x 3400m GTA-scale archipelago realm (4x area)
     this.oceanMesh = null;
     this.islandMesh = null;
     this.beachesMesh = null;
     this.lakeMesh = null;
     this.riverMesh = null;
+    this.lakeRimMesh = null;
 
-    // Lake & River bounds for physics & water safety
-    this.lakeCenter = new THREE.Vector2(-240, -180);
-    this.lakeRadius = 80;
+    // Emerald Lake & River Coordinates
+    this.lakeCenter = new THREE.Vector2(-360, 40);
+    this.lakeRadius = 115;
+    this.lakeWaterLevel = 0.85;
 
     this.init();
   }
@@ -26,16 +28,16 @@ export class IslandTerrain {
     this.createCoastalBoulders();
   }
 
+  // 1. Endless Oceanic Sea Plane stretching far beyond horizon
   createOcean() {
-    // Massive ocean plane stretching to horizon
-    const oceanGeo = new THREE.PlaneGeometry(4800, 4800, 48, 48);
+    const oceanGeo = new THREE.PlaneGeometry(8000, 8000, 64, 64);
     oceanGeo.rotateX(-Math.PI / 2);
 
     const oceanMat = new THREE.MeshToonMaterial({
       color: 0x0284c7, // Vibrant deep anime cyan-blue
       gradientMap: this.assetGen.toonGradient,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.92,
       depthWrite: false
     });
 
@@ -45,46 +47,137 @@ export class IslandTerrain {
     this.scene.add(this.oceanMesh);
   }
 
-  createLakeAndRiver() {
-    // 1. Emerald Lake Water Surface
-    const lakeGeo = new THREE.CircleGeometry(this.lakeRadius, 48);
-    lakeGeo.rotateX(-Math.PI / 2);
-    const lakeMat = new THREE.MeshToonMaterial({
-      color: 0x06b6d4, // Crystal turquoise lake
-      gradientMap: this.assetGen.toonGradient,
-      transparent: true,
-      opacity: 0.92,
-      depthWrite: false
-    });
-    this.lakeMesh = new THREE.Mesh(lakeGeo, lakeMat);
-    this.lakeMesh.position.set(this.lakeCenter.x, 0.35, this.lakeCenter.y);
-    this.scene.add(this.lakeMesh);
+  // 2. Organic Island Coastline Radius Function
+  // Returns the island boundary distance from center (0,0) at a given polar angle
+  getIslandRadius(ang) {
+    // Base radius: ~1280m
+    let r = 1280;
 
-    // Lake Stone Promenade Bank
-    const stoneRimGeo = new THREE.RingGeometry(this.lakeRadius - 1.5, this.lakeRadius + 4.5, 48);
-    stoneRimGeo.rotateX(-Math.PI / 2);
-    const rimMat = this.assetGen.createToonMaterial(0x64748b);
-    const rim = new THREE.Mesh(stoneRimGeo, rimMat);
-    rim.position.set(this.lakeCenter.x, 0.42, this.lakeCenter.y);
-    rim.receiveShadow = true;
-    this.scene.add(rim);
+    // A. Mount Sakura Protrusion (East/North-East, ang ~ -0.6 to 0.4)
+    const mtnAng = THREE.MathUtils.euclideanModulo(ang + 0.3, Math.PI * 2);
+    if (mtnAng < 1.1) {
+      r += 280 * Math.cos((mtnAng - 0.55) * (Math.PI / 1.1));
+    }
 
-    // 2. River Channel flowing from Lake to South-West Ocean (Length: 260m, Width: 26m)
-    const riverGeo = new THREE.PlaneGeometry(26, 280);
-    riverGeo.rotateX(-Math.PI / 2);
-    this.riverMesh = new THREE.Mesh(riverGeo, lakeMat);
-    this.riverMesh.position.set(-330, 0.32, -30);
-    this.riverMesh.rotation.y = 0.38; // Diagonal flow towards ocean
-    this.scene.add(this.riverMesh);
+    // B. Lighthouse Cape Protrusion (North-West, ang ~ -2.45 to -1.8)
+    const capeAng = THREE.MathUtils.euclideanModulo(ang + 2.15, Math.PI * 2);
+    if (capeAng < 0.95) {
+      r += 360 * Math.cos((capeAng - 0.475) * (Math.PI / 0.95));
+    }
+
+    // C. Emerald Bay Inward Coastal Fjord (West/South-West, ang ~ 2.4 to 3.0)
+    const bayAng = THREE.MathUtils.euclideanModulo(ang - 2.65, Math.PI * 2);
+    if (bayAng < 0.85) {
+      r -= 260 * Math.cos((bayAng - 0.425) * (Math.PI / 0.85));
+    }
+
+    // D. Southern Sakura Peninsula (South, ang ~ 1.2 to 1.9)
+    const southAng = THREE.MathUtils.euclideanModulo(ang - 1.55, Math.PI * 2);
+    if (southAng < 0.85) {
+      r += 220 * Math.cos((southAng - 0.425) * (Math.PI / 0.85));
+    }
+
+    // E. Natural fractal coastal harmonics (Bays, coves, sea inlets)
+    r += Math.sin(ang * 5.0) * 75.0 + Math.cos(ang * 8.0) * 45.0 + Math.sin(ang * 13.0) * 22.0;
+
+    return r;
   }
 
+  // 3. Ground Elevation Topography Function across the entire 3400m Realm
+  getElevation(x, z) {
+    const r = Math.hypot(x, z);
+    const ang = Math.atan2(z, x);
+    const islandR = this.getIslandRadius(ang);
+
+    // Sea floor beyond coastal shelf
+    if (r > islandR + 80) {
+      return -8.0;
+    }
+    // Coastal beach slope dipping into ocean
+    if (r > islandR - 40) {
+      const t = (r - (islandR - 40)) / 120.0;
+      return THREE.MathUtils.lerp(1.2, -8.0, Math.min(1.0, Math.pow(t, 1.4)));
+    }
+
+    // -----------------------------------------------------------------
+    // Feature 1: Mount Sakura Highlands (East/North-East: x: 650, z: -550)
+    // -----------------------------------------------------------------
+    const mtnDist = Math.hypot(x - 650, z - -550);
+    if (mtnDist < 420) {
+      const factor = Math.cos((mtnDist / 420) * (Math.PI / 2));
+      const summit = Math.pow(factor, 1.8) * 48.0; // Summit up to 50m!
+      const terrace = Math.sin(mtnDist * 0.05) * 1.8;
+      return 1.8 + summit + terrace;
+    }
+
+    // -----------------------------------------------------------------
+    // Feature 2: Lighthouse Cape & Ocean Bluffs (North-West: x: -950, z: -750)
+    // -----------------------------------------------------------------
+    const capeDist = Math.hypot(x - -950, z - -750);
+    if (capeDist < 320) {
+      const factor = Math.cos((capeDist / 320) * (Math.PI / 2));
+      return 1.8 + factor * 24.5; // Dramatic 26m ocean bluffs!
+    }
+
+    // -----------------------------------------------------------------
+    // Feature 3: Emerald Lake Basin (West: x: -360, z: 40, radius: 115m)
+    // -----------------------------------------------------------------
+    const lkDist = Math.hypot(x - this.lakeCenter.x, z - this.lakeCenter.y);
+    if (lkDist < this.lakeRadius) {
+      // Basin dips smoothly below water surface (0.85m) down to -2.2m
+      const basinDepth = Math.cos((lkDist / this.lakeRadius) * (Math.PI / 2)) * 3.1;
+      return 0.85 - basinDepth;
+    }
+
+    // -----------------------------------------------------------------
+    // Feature 4: River Channel (Flowing from Lake to Emerald Bay)
+    // Runs from (-360, 40) towards (-950, 450)
+    // -----------------------------------------------------------------
+    const riverStart = new THREE.Vector2(-360, 40);
+    const riverEnd = new THREE.Vector2(-950, 450);
+    const riverDir = new THREE.Vector2().subVectors(riverEnd, riverStart);
+    const riverLen = riverDir.length();
+    riverDir.normalize();
+
+    const pt = new THREE.Vector2(x - riverStart.x, z - riverStart.y);
+    const proj = pt.dot(riverDir);
+    if (proj > 70 && proj < riverLen + 60) {
+      const perpDist = Math.abs(pt.x * riverDir.y - pt.y * riverDir.x);
+      const riverHalfWidth = 24.0;
+      if (perpDist < riverHalfWidth) {
+        const factor = Math.cos((perpDist / riverHalfWidth) * (Math.PI / 2));
+        return 0.85 - factor * 2.4; // Channel carved below water
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // Feature 5: Sakura Town Residential Rolling Suburb Hills (South/South-East)
+    // -----------------------------------------------------------------
+    if (x > -180 && z > 180 && x < 800 && z < 900) {
+      const hillWave = (Math.sin(x * 0.008) * Math.cos(z * 0.008) + Math.sin(x * 0.018 + z * 0.012) * 0.5) * 2.8;
+      return 1.8 + Math.max(0, hillWave);
+    }
+
+    // -----------------------------------------------------------------
+    // Feature 6: Metropolitan Downtown & Civic Core (Center: x: -200~250, z: -250~200)
+    // Smoothly graded flat plateau at y = 1.8m
+    // -----------------------------------------------------------------
+    if (x > -240 && x < 280 && z > -280 && z < 220) {
+      return 1.8;
+    }
+
+    // Default natural rolling terrain
+    const baseWave = (Math.sin(x * 0.005) + Math.cos(z * 0.005)) * 1.2;
+    return 1.8 + Math.max(0, baseWave);
+  }
+
+  // 4. Create Main Island 3D Base Mesh
   createIslandBase() {
-    const segments = 160;
+    const segments = 220; // High resolution grid for smooth terrain
     const islandGeo = new THREE.PlaneGeometry(this.size, this.size, segments, segments);
     islandGeo.rotateX(-Math.PI / 2);
 
     const pos = islandGeo.attributes.position;
-
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
@@ -104,177 +197,175 @@ export class IslandTerrain {
     this.scene.add(this.islandMesh);
   }
 
-  createBeaches() {
-    // Golden anime sandy beach fringe
-    const beachGeo = new THREE.RingGeometry(this.size * 0.38, this.size * 0.48, 96);
-    beachGeo.rotateX(-Math.PI / 2);
+  // 5. Create Emerald Lake Water Surface & Grand River
+  createLakeAndRiver() {
+    // A. Emerald Lake Water Surface
+    const lakeGeo = new THREE.CircleGeometry(this.lakeRadius, 64);
+    lakeGeo.rotateX(-Math.PI / 2);
 
+    const waterMat = new THREE.MeshToonMaterial({
+      color: 0x06b6d4, // Crystal clear anime turquoise
+      gradientMap: this.assetGen.toonGradient,
+      transparent: true,
+      opacity: 0.92,
+      depthWrite: false
+    });
+
+    this.lakeMesh = new THREE.Mesh(lakeGeo, waterMat);
+    this.lakeMesh.position.set(this.lakeCenter.x, this.lakeWaterLevel, this.lakeCenter.y);
+    this.scene.add(this.lakeMesh);
+
+    // Lake Stone Promenade Bank Rim
+    const stoneRimGeo = new THREE.RingGeometry(this.lakeRadius - 1.5, this.lakeRadius + 6.0, 64);
+    stoneRimGeo.rotateX(-Math.PI / 2);
+    const rimMat = this.assetGen.createToonMaterial(0x64748b);
+    const rim = new THREE.Mesh(stoneRimGeo, rimMat);
+    rim.position.set(this.lakeCenter.x, this.lakeWaterLevel + 0.08, this.lakeCenter.y);
+    rim.receiveShadow = true;
+    this.scene.add(rim);
+
+    // B. River Channel Water Mesh
+    // Runs from (-360, 40) towards (-950, 450)
+    const riverStart = new THREE.Vector2(-360, 40);
+    const riverEnd = new THREE.Vector2(-950, 450);
+    const diff = new THREE.Vector2().subVectors(riverEnd, riverStart);
+    const len = diff.length();
+    const angle = Math.atan2(diff.y, diff.x);
+    const mid = new THREE.Vector2().addVectors(riverStart, riverEnd).multiplyScalar(0.5);
+
+    const riverGeo = new THREE.PlaneGeometry(len, 44);
+    riverGeo.rotateX(-Math.PI / 2);
+    this.riverMesh = new THREE.Mesh(riverGeo, waterMat);
+    this.riverMesh.position.set(mid.x, this.lakeWaterLevel - 0.05, mid.y);
+    this.riverMesh.rotation.y = -angle;
+    this.scene.add(this.riverMesh);
+  }
+
+  // 6. Golden Anime Sandy Beaches along perimeter
+  createBeaches() {
+    const count = 72;
+    const beachGroup = new THREE.Group();
     const sandMat = new THREE.MeshToonMaterial({
-      color: 0xfef08a,
+      color: 0xfef08a, // Soft warm anime sand
       gradientMap: this.assetGen.toonGradient
     });
 
-    this.beachesMesh = new THREE.Mesh(beachGeo, sandMat);
-    this.beachesMesh.position.y = -0.12;
-    this.beachesMesh.receiveShadow = true;
-    this.scene.add(this.beachesMesh);
-  }
-
-  createCoastalBoulders() {
-    // Rocky sea stacks and breakwater cliffs around the island edges
-    const rockMat = this.assetGen.createToonMaterial(0x475569);
-    const count = 40;
-
     for (let i = 0; i < count; i++) {
       const ang = (i / count) * Math.PI * 2;
-      const r = 680 + Math.random() * 80;
+      const r = this.getIslandRadius(ang) - 15;
       const x = Math.cos(ang) * r;
       const z = Math.sin(ang) * r;
 
-      const rockGeo = new THREE.DodecahedronGeometry(8 + Math.random() * 12, 1);
+      const patchGeo = new THREE.CylinderGeometry(40, 55, 0.4, 8);
+      const patch = new THREE.Mesh(patchGeo, sandMat);
+      patch.position.set(x, 0.15, z);
+      patch.rotation.y = ang;
+      patch.scale.set(1.4, 1.0, 0.8);
+      patch.receiveShadow = true;
+      beachGroup.add(patch);
+    }
+
+    this.scene.add(beachGroup);
+  }
+
+  // 7. Coastal Breakwaters and Sea Cliffs
+  createCoastalBoulders() {
+    const rockMat = this.assetGen.createToonMaterial(0x475569);
+    const count = 50;
+
+    for (let i = 0; i < count; i++) {
+      const ang = (i / count) * Math.PI * 2;
+      const r = this.getIslandRadius(ang) + (Math.sin(i * 3) * 30);
+      const x = Math.cos(ang) * r;
+      const z = Math.sin(ang) * r;
+
+      const rockGeo = new THREE.DodecahedronGeometry(10 + Math.random() * 16, 1);
       const rock = new THREE.Mesh(rockGeo, rockMat);
-      rock.position.set(x, 1.0 + Math.random() * 6, z);
+      rock.position.set(x, 1.0 + Math.random() * 8, z);
       rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-      rock.scale.set(1.2, 0.8, 1.2);
+      rock.scale.set(1.4, 0.9, 1.4);
       rock.castShadow = true;
       rock.receiveShadow = true;
       this.scene.add(rock);
     }
   }
 
-  // -------------------------------------------------------------
-  // Asymmetric Topography & Ground Elevation (1800m Realm)
-  // -------------------------------------------------------------
-  getElevation(x, z) {
-    const half = this.size / 2;
-    const nx = x / half;
-    const nz = z / half;
-    // Asymmetric squircle coast boundary
-    const dist = Math.pow(Math.abs(nx), 2.8) + Math.pow(Math.abs(nz), 2.8);
-
-    if (dist >= 1.0) {
-      return -5.0; // Deep sea
-    }
-
-    // 1. Mount Sakura Highlands (Peak at x: 280, z: -460, radius ~240m)
-    const mtnDist = Math.hypot(x - 280, z + 460);
-    if (mtnDist < 250) {
-      const factor = Math.cos((mtnDist / 250) * (Math.PI / 2));
-      // Organic ridges & terraces for mountain shrine
-      const terrace = Math.sin(mtnDist * 0.08) * 1.5;
-      return 1.0 + Math.pow(factor, 1.8) * 36.0 + terrace; // Up to 37 meters high!
-    }
-
-    // 2. Coastal Promontory Lighthouse Cliff (North-West, x: -440, z: -440)
-    const cliffDist = Math.hypot(x + 440, z + 440);
-    if (cliffDist < 160) {
-      const factor = Math.cos((cliffDist / 160) * (Math.PI / 2));
-      return 1.0 + factor * 16.5; // Sea cliff up to 17.5m
-    }
-
-    // 3. Emerald Lake Basin (Centered at x: -240, z: -180, radius 80m)
-    const lkDist = Math.hypot(x - this.lakeCenter.x, z - this.lakeCenter.y);
-    if (lkDist < this.lakeRadius) {
-      const lakeDepth = Math.cos((lkDist / this.lakeRadius) * (Math.PI / 2)) * 1.6;
-      return 0.95 - lakeDepth; // Dips below water level (0.35m)
-    }
-
-    // 4. River Channel (Width: ~26m from lake out to south-west ocean)
-    const rdx = x - -330;
-    const rdz = z - -30;
-    // Rotate into river local coords
-    const localRx = rdx * Math.cos(-0.38) - rdz * Math.sin(-0.38);
-    const localRz = rdx * Math.sin(-0.38) + rdz * Math.cos(-0.38);
-    if (Math.abs(localRx) < 14 && Math.abs(localRz) < 145) {
-      const factor = Math.cos((Math.abs(localRx) / 14) * (Math.PI / 2));
-      return 0.95 - factor * 1.5; // Dips below river water
-    }
-
-    // 5. Sakura Old Town Rolling Suburb Hills (x: 80~460, z: 80~460)
-    if (x > 60 && z > 60 && x < 500 && z < 500) {
-      const hillWave = Math.sin(x * 0.012) * Math.cos(z * 0.012) * 1.6;
-      return 1.0 + Math.max(0, hillWave);
-    }
-
-    // 6. Central Metropolis Plateau & Downtown Roads are graded flat at y = 1.0m
-    const rCenter = Math.hypot(x, z);
-    if (rCenter < 520) {
-      return 1.0;
-    }
-
-    // 7. Coastal slope dipping into beaches
-    if (dist < 0.82) {
-      return 1.0;
-    } else {
-      const factor = (1.0 - dist) / 0.18;
-      return Math.max(-0.6, factor * 1.0);
-    }
-  }
-
-  // Check if position is inside dangerous deep water (Lake, River, Ocean)
+  // 8. Strict Water Hazard Detection
+  // Returns true if (x, z) is in ocean, lake, or river, EXCLUDING the Grand Lake Bridge corridor!
   isWater(x, z) {
-    // 1. Ocean edge check
-    const half = this.size / 2;
-    const dist = Math.pow(Math.abs(x / half), 2.8) + Math.pow(Math.abs(z / half), 2.8);
-    if (dist > 0.88) return true;
+    const r = Math.hypot(x, z);
+    const ang = Math.atan2(z, x);
+    const islandR = this.getIslandRadius(ang);
 
-    // 2. Emerald Lake (Exclude wooden bridge corridor!)
+    // Ocean boundary
+    if (r > islandR - 8.0) return true;
+
+    // Check Grand Lake Bridge Corridor (Bridge spans along z = 40 from x = -480 to x = -240)
+    // Width is 24m (|z - 40| < 12.0)
+    if (x >= -480 && x <= -240 && Math.abs(z - 40) < 12.5) {
+      return false; // Safe solid bridge deck!
+    }
+
+    // Emerald Lake
     const lkDist = Math.hypot(x - this.lakeCenter.x, z - this.lakeCenter.y);
-    if (lkDist < this.lakeRadius - 1.5) {
-      // Allow wooden bridge corridor passing over lake shore/edge (x near -240, z near -180)
-      if (Math.abs(x - -240) < 5.0 && Math.abs(z - -180) < 22) return false;
+    if (lkDist < this.lakeRadius - 2.0) {
       return true;
     }
 
-    // 3. River Channel (Exclude heavy steel truss river bridge!)
-    const rdx = x - -330;
-    const rdz = z - -30;
-    const localRx = rdx * Math.cos(-0.38) - rdz * Math.sin(-0.38);
-    const localRz = rdx * Math.sin(-0.38) + rdz * Math.cos(-0.38);
-    if (Math.abs(localRx) < 14 && Math.abs(localRz) < 145) {
-      // River Bridge deck at localRz ~ -4 (near z = -35, x = -330)
-      if (Math.abs(localRz - -4) < 16) return false;
-      return true;
+    // River Channel
+    const riverStart = new THREE.Vector2(-360, 40);
+    const riverEnd = new THREE.Vector2(-950, 450);
+    const riverDir = new THREE.Vector2().subVectors(riverEnd, riverStart);
+    const riverLen = riverDir.length();
+    riverDir.normalize();
+
+    const pt = new THREE.Vector2(x - riverStart.x, z - riverStart.y);
+    const proj = pt.dot(riverDir);
+    if (proj > 70 && proj < riverLen + 40) {
+      const perpDist = Math.abs(pt.x * riverDir.y - pt.y * riverDir.x);
+      if (perpDist < 20.0) {
+        return true;
+      }
     }
 
     return false;
   }
 
-  // Get nearest safe land point if player or vehicle falls into water
+  // 9. Nearest Safe Shore Rescue Location
   getNearestShore(x, z) {
-    // 1. Lake rescue
+    // A. Emerald Lake Rescue
     const lkDist = Math.hypot(x - this.lakeCenter.x, z - this.lakeCenter.y);
-    if (lkDist < this.lakeRadius + 15) {
+    if (lkDist < this.lakeRadius + 20) {
       const dirX = (x - this.lakeCenter.x) / (lkDist || 1);
       const dirZ = (z - this.lakeCenter.y) / (lkDist || 1);
       return new THREE.Vector3(
-        this.lakeCenter.x + dirX * (this.lakeRadius + 6),
-        1.1,
-        this.lakeCenter.y + dirZ * (this.lakeRadius + 6)
+        this.lakeCenter.x + dirX * (this.lakeRadius + 8),
+        1.8,
+        this.lakeCenter.y + dirZ * (this.lakeRadius + 8)
       );
     }
 
-    // 2. River rescue
-    const rdx = x - -330;
-    const rdz = z - -30;
-    const localRx = rdx * Math.cos(-0.38) - rdz * Math.sin(-0.38);
-    const localRz = rdx * Math.sin(-0.38) + rdz * Math.cos(-0.38);
-    if (Math.abs(localRz) < 150) {
-      const pushSign = localRx >= 0 ? 1 : -1;
-      const targetLocalRx = pushSign * 18.0;
-      // Convert back to world coords
-      const worldX = -330 + targetLocalRx * Math.cos(0.38) - localRz * Math.sin(0.38);
-      const worldZ = -30 + targetLocalRx * Math.sin(0.38) + localRz * Math.cos(0.38);
-      return new THREE.Vector3(worldX, 1.1, worldZ);
+    // B. River Channel Rescue
+    const riverStart = new THREE.Vector2(-360, 40);
+    const riverEnd = new THREE.Vector2(-950, 450);
+    const riverDir = new THREE.Vector2().subVectors(riverEnd, riverStart).normalize();
+    const pt = new THREE.Vector2(x - riverStart.x, z - riverStart.y);
+    const proj = pt.dot(riverDir);
+    if (proj > 0 && proj < 700) {
+      const norm = new THREE.Vector2(-riverDir.y, riverDir.x);
+      const dot = pt.dot(norm);
+      const sign = dot >= 0 ? 1 : -1;
+      const safePt = riverStart.clone().add(riverDir.clone().multiplyScalar(proj)).add(norm.clone().multiplyScalar(sign * 28));
+      return new THREE.Vector3(safePt.x, 1.8, safePt.y);
     }
 
-    // 3. Ocean rescue (pull back towards beach perimeter)
-    const angle = Math.atan2(z, x);
-    const safeRadius = 660;
+    // C. Ocean Rescue (Pull back onto safe beach rim)
+    const ang = Math.atan2(z, x);
+    const safeR = this.getIslandRadius(ang) - 45;
     return new THREE.Vector3(
-      Math.cos(angle) * safeRadius,
-      1.1,
-      Math.sin(angle) * safeRadius
+      Math.cos(ang) * safeR,
+      1.8,
+      Math.sin(ang) * safeR
     );
   }
 
@@ -283,7 +374,7 @@ export class IslandTerrain {
       this.oceanMesh.position.y = -0.4 + Math.sin(time * 1.5) * 0.08;
     }
     if (this.lakeMesh) {
-      this.lakeMesh.position.y = 0.35 + Math.sin(time * 2.0) * 0.03;
+      this.lakeMesh.position.y = this.lakeWaterLevel + Math.sin(time * 2.0) * 0.03;
     }
   }
 }

@@ -19,6 +19,10 @@ export class World {
   }
 
   getGroundElevation(x, z) {
+    const roadElev = this.roads.getBridgeElevation(x, z);
+    if (roadElev !== null) {
+      return roadElev;
+    }
     return this.terrain.getElevation(x, z);
   }
 

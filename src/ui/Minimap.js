@@ -5,7 +5,7 @@ export class Minimap {
     this.world = world;
     this.roads = roadNetwork;
 
-    this.mapRange = 240; // Meters visible around player in 1800m world
+    this.mapRange = 320; // Meters visible around player in 3400m realm
     this.width = this.canvas ? this.canvas.width : 220;
     this.height = this.canvas ? this.canvas.height : 220;
   }
@@ -34,81 +34,84 @@ export class Minimap {
     // 1. Water Bodies (Emerald Lake & River Channel)
     // ---------------------------------------------------------
     ctx.fillStyle = '#0284c7'; // Turquoise blue
-    // Emerald Lake (x: -330, z: -180, radius: 80)
-    const lakeDx = (-330 - playerPos.x) * scale;
-    const lakeDz = (-180 - playerPos.z) * scale;
+    // Emerald Lake (x: -360, z: 40, radius: 115)
+    const lakeDx = (-360 - playerPos.x) * scale;
+    const lakeDz = (40 - playerPos.z) * scale;
     ctx.beginPath();
-    ctx.arc(lakeDx, lakeDz, 80 * scale, 0, Math.PI * 2);
+    ctx.arc(lakeDx, lakeDz, 115 * scale, 0, Math.PI * 2);
     ctx.fill();
 
-    // River Channel (Width: 26m, length: 280m flowing through -330, -30)
+    // River Channel towards (-950, 450)
     ctx.save();
-    ctx.translate((-330 - playerPos.x) * scale, (-30 - playerPos.z) * scale);
-    ctx.rotate(-0.38);
-    ctx.fillRect(-13 * scale, -140 * scale, 26 * scale, 280 * scale);
+    ctx.translate((-360 - playerPos.x) * scale, (40 - playerPos.z) * scale);
+    ctx.rotate(-0.58);
+    ctx.fillRect(-22 * scale, 0, 44 * scale, 580 * scale);
     ctx.restore();
 
     // ---------------------------------------------------------
     // 2. Road Network (Asphalt base)
     // ---------------------------------------------------------
     ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 14 * scale;
+    ctx.lineWidth = 16 * scale;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // A. Grand Central Roundabout (Radius: 40m)
+    // A. Grand Central Boulevard (East-West along z = 40)
     ctx.beginPath();
-    ctx.arc(-playerPos.x * scale, -playerPos.z * scale, 40 * scale, 0, Math.PI * 2);
+    ctx.moveTo((-240 - playerPos.x) * scale, (40 - playerPos.z) * scale);
+    ctx.lineTo((540 - playerPos.x) * scale, (40 - playerPos.z) * scale);
     ctx.stroke();
 
-    // B. Coastal Highway Ring (Radius: 650m)
+    // B. Downtown Financial Avenue (North-South along x = 0)
     ctx.beginPath();
-    ctx.arc(-playerPos.x * scale, -playerPos.z * scale, 650 * scale, 0, Math.PI * 2);
+    ctx.moveTo((0 - playerPos.x) * scale, (-360 - playerPos.z) * scale);
+    ctx.lineTo((0 - playerPos.x) * scale, (460 - playerPos.z) * scale);
     ctx.stroke();
 
-    // C. 4 Major Arterial Avenues (Length 560m each)
-    // North Avenue
+    // C. Grand Central Roundabout at (0, 40)
     ctx.beginPath();
-    ctx.moveTo(-playerPos.x * scale, (-46 - playerPos.z) * scale);
-    ctx.lineTo(-playerPos.x * scale, (-620 - playerPos.z) * scale);
+    ctx.arc((0 - playerPos.x) * scale, (40 - playerPos.z) * scale, 36 * scale, 0, Math.PI * 2);
     ctx.stroke();
 
-    // South Avenue
-    ctx.beginPath();
-    ctx.moveTo(-playerPos.x * scale, (46 - playerPos.z) * scale);
-    ctx.lineTo(-playerPos.x * scale, (620 - playerPos.z) * scale);
-    ctx.stroke();
-
-    // East Avenue
-    ctx.beginPath();
-    ctx.moveTo((46 - playerPos.x) * scale, -playerPos.z * scale);
-    ctx.lineTo((620 - playerPos.x) * scale, -playerPos.z * scale);
-    ctx.stroke();
-
-    // West Avenue (Crosses heavy steel bridge at -330, -35)
-    ctx.beginPath();
-    ctx.moveTo((-46 - playerPos.x) * scale, -playerPos.z * scale);
-    ctx.lineTo((-620 - playerPos.x) * scale, -playerPos.z * scale);
-    ctx.stroke();
-
-    // D. Downtown Internal Streets
-    [-160, -90, -30].forEach(rx => {
+    // D. Commercial Grid Streets
+    [120, 240, 380].forEach(gx => {
       ctx.beginPath();
-      ctx.moveTo((rx - playerPos.x) * scale, (-200 - playerPos.z) * scale);
-      ctx.lineTo((rx - playerPos.x) * scale, (0 - playerPos.z) * scale);
+      ctx.moveTo((gx - playerPos.x) * scale, (-320 - playerPos.z) * scale);
+      ctx.lineTo((gx - playerPos.x) * scale, (80 - playerPos.z) * scale);
       ctx.stroke();
     });
-    [-160, -90, -30].forEach(rz => {
+    [-120, -240].forEach(gz => {
       ctx.beginPath();
-      ctx.moveTo((-200 - playerPos.x) * scale, (rz - playerPos.z) * scale);
-      ctx.lineTo((0 - playerPos.x) * scale, (rz - playerPos.z) * scale);
+      ctx.moveTo((0 - playerPos.x) * scale, (gz - playerPos.z) * scale);
+      ctx.lineTo((450 - playerPos.x) * scale, (gz - playerPos.z) * scale);
       ctx.stroke();
     });
 
-    // E. Mount Sakura Switchback Mountain Pass
+    // E. Sakura Town Residential Lanes
+    [160, 280, 420, 560].forEach(rz => {
+      ctx.beginPath();
+      ctx.moveTo((-80 - playerPos.x) * scale, (rz - playerPos.z) * scale);
+      ctx.lineTo((500 - playerPos.x) * scale, (rz - playerPos.z) * scale);
+      ctx.stroke();
+    });
+
+    // F. Lighthouse Knitted Forest Highway
+    const lhPts = [
+      { x: -480, z: 40 }, { x: -600, z: 20 }, { x: -720, z: -100 },
+      { x: -820, z: -300 }, { x: -880, z: -520 }, { x: -950, z: -750 }
+    ];
+    ctx.beginPath();
+    ctx.moveTo((lhPts[0].x - playerPos.x) * scale, (lhPts[0].z - playerPos.z) * scale);
+    for (let p = 1; p < lhPts.length; p++) {
+      ctx.lineTo((lhPts[p].x - playerPos.x) * scale, (lhPts[p].z - playerPos.z) * scale);
+    }
+    ctx.stroke();
+
+    // G. Mount Sakura Switchback Mountain Road
     const mtnPts = [
-      { x: 120, z: -220 }, { x: 160, z: -280 }, { x: 210, z: -320 },
-      { x: 170, z: -380 }, { x: 230, z: -410 }, { x: 275, z: -450 }
+      { x: 400, z: 40 }, { x: 450, z: -100 }, { x: 520, z: -220 },
+      { x: 600, z: -340 }, { x: 530, z: -420 }, { x: 620, z: -490 },
+      { x: 560, z: -530 }, { x: 650, z: -550 }
     ];
     ctx.beginPath();
     ctx.moveTo((mtnPts[0].x - playerPos.x) * scale, (mtnPts[0].z - playerPos.z) * scale);
@@ -117,44 +120,26 @@ export class Minimap {
     }
     ctx.stroke();
 
-    // F. Sakura Old Town Winding Suburban Roads
-    const resPts = [
-      { x: 60, z: 60 }, { x: 130, z: 90 }, { x: 200, z: 130 },
-      { x: 260, z: 190 }, { x: 330, z: 260 }, { x: 410, z: 340 }, { x: 480, z: 430 }
-    ];
+    // ---------------------------------------------------------
+    // The Grand Emerald Lake Bridge (Red Steel Truss Span)
+    // ---------------------------------------------------------
+    ctx.strokeStyle = '#ef4444'; // Japanese Vermilion Red Bridge Deck
+    ctx.lineWidth = 18 * scale;
     ctx.beginPath();
-    ctx.moveTo((resPts[0].x - playerPos.x) * scale, (resPts[0].z - playerPos.z) * scale);
-    for (let p = 1; p < resPts.length; p++) {
-      ctx.lineTo((resPts[p].x - playerPos.x) * scale, (resPts[p].z - playerPos.z) * scale);
-    }
+    ctx.moveTo((-485 - playerPos.x) * scale, (40 - playerPos.z) * scale);
+    ctx.lineTo((-235 - playerPos.x) * scale, (40 - playerPos.z) * scale);
     ctx.stroke();
 
-    // River Bridge Deck (Over river at -330, -35)
-    ctx.strokeStyle = '#ef4444'; // Red Japanese steel bridge
-    ctx.lineWidth = 16 * scale;
-    ctx.beginPath();
-    ctx.moveTo((-346 - playerPos.x) * scale, (-35 - playerPos.z) * scale);
-    ctx.lineTo((-314 - playerPos.x) * scale, (-35 - playerPos.z) * scale);
-    ctx.stroke();
-
-    // Yellow Dashed Centerlines for Roundabout & Avenues
+    // Yellow Dashed Centerlines for Boulevards
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 1.8;
     ctx.setLineDash([4, 4]);
 
     ctx.beginPath();
-    ctx.arc(-playerPos.x * scale, -playerPos.z * scale, 40 * scale, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(-playerPos.x * scale, (-46 - playerPos.z) * scale);
-    ctx.lineTo(-playerPos.x * scale, (-620 - playerPos.z) * scale);
-    ctx.moveTo(-playerPos.x * scale, (46 - playerPos.z) * scale);
-    ctx.lineTo(-playerPos.x * scale, (620 - playerPos.z) * scale);
-    ctx.moveTo((46 - playerPos.x) * scale, -playerPos.z * scale);
-    ctx.lineTo((620 - playerPos.x) * scale, -playerPos.z * scale);
-    ctx.moveTo((-46 - playerPos.x) * scale, -playerPos.z * scale);
-    ctx.lineTo((-620 - playerPos.x) * scale, -playerPos.z * scale);
+    ctx.moveTo((-240 - playerPos.x) * scale, (40 - playerPos.z) * scale);
+    ctx.lineTo((540 - playerPos.x) * scale, (40 - playerPos.z) * scale);
+    ctx.moveTo((0 - playerPos.x) * scale, (-360 - playerPos.z) * scale);
+    ctx.lineTo((0 - playerPos.x) * scale, (460 - playerPos.z) * scale);
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -162,12 +147,14 @@ export class Minimap {
     // 3. Landmark POI Badges (Icons)
     // ---------------------------------------------------------
     const pois = [
-      { icon: '⛩️', x: 275, z: -460 }, // Shinto Shrine
-      { icon: '👮', x: -18, z: 52 },   // Police Koban
-      { icon: '🏥', x: 52, z: -18 },   // Hospital
-      { icon: '🏦', x: -18, z: -52 },  // Bank
-      { icon: '🏪', x: 52, z: 18 },    // OpenMart
-      { icon: '☕', x: 54, z: 42 }     // Cafe
+      { icon: '⛩️', x: 650, z: -550 },  // Mount Sakura Shrine
+      { icon: '⛵', x: -950, z: -750 }, // Lighthouse
+      { icon: '👮', x: -80, z: -40 },   // Police Station
+      { icon: '🏥', x: -150, z: -80 },  // Hospital
+      { icon: '🏦', x: -80, z: -120 },  // Bank
+      { icon: '🏪', x: 240, z: -80 },   // OpenMart
+      { icon: '☕', x: 180, z: -40 },   // Cafe
+      { icon: '🌲', x: -360, z: 40 }    // Emerald Lake
     ];
 
     ctx.font = '11px sans-serif';
