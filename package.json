@@ -1,0 +1,32 @@
+{
+  "name": "opensquare",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A 3D anime-styled open world GTA-style web game built with Three.js and Vite.",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  },
+  "keywords": [
+    "threejs",
+    "webgl",
+    "open-world",
+    "anime",
+    "game",
+    "gta-style",
+    "3d",
+    "traffic-ai",
+    "npc-ai",
+    "vite"
+  ],
+  "author": "VaibhavSoni24",
+  "license": "MIT"
+}
