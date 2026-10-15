@@ -1,0 +1,17 @@
+{
+  "name": "OpenSquare - 3D Anime Open World",
+  "short_name": "OpenSquare",
+  "description": "A completely working 3D anime open world game with bustling pedestrian and car AI, smooth driving, and vibrant island districts.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#ff7eb3",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

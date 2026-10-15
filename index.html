@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- Primary Meta Tags -->
+  <title>OpenSquare | 3D Anime Open World Adventure</title>
+  <meta name="title" content="OpenSquare | 3D Anime Open World Adventure" />
+  <meta name="description" content="Experience OpenSquare: a completely working 3D anime open-world island game featuring intelligent traffic AI, cute pedestrian NPCs, smooth third-person driving, and scenic city districts." />
+  <meta name="keywords" content="OpenSquare, 3D game, anime game, open world, threejs, webgl, gta web game, car driving game, traffic ai, browser 3d game" />
+  <meta name="author" content="VaibhavSoni24" />
+  <meta name="theme-color" content="#ff7eb3" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://vaibhavsoni24.github.io/OpenSquare/" />
+  <meta property="og:title" content="OpenSquare | 3D Anime Open World Adventure" />
+  <meta property="og:description" content="Explore a vibrant 3D anime open world island! Drive cute cars, walk through lively Sakura districts, explore the central park, and cruise with full traffic & pedestrian AI." />
+  <meta property="og:image" content="/favicon.svg" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://vaibhavsoni24.github.io/OpenSquare/" />
+  <meta property="twitter:title" content="OpenSquare | 3D Anime Open World Adventure" />
+  <meta property="twitter:description" content="A cute anime open world web game. Drive cars, meet NPCs, and roam an expansive island in 3D right in your browser!" />
+  <meta property="twitter:image" content="/favicon.svg" />
+
+  <!-- Google Fonts: Outfit & M PLUS Rounded 1c for Japanese anime vibes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- Canvas mount for 3D Game -->
+  <div id="game-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+      <div class="loading-logo-wrapper">
+        <img src="/favicon.svg" alt="OpenSquare Logo" class="loading-logo" />
+        <div class="loading-pulse-ring"></div>
+      </div>
+      <h1 class="game-title">OpenSquare</h1>
+      <p class="game-subtitle">オープン・スクエア 🌸 3D Anime Open World</p>
+      
+      <div class="loading-progress-container">
+        <div id="loading-bar" class="loading-bar" style="width: 15%;"></div>
+      </div>
+      <div id="loading-status" class="loading-status">Generating Island Terrain & AI Roads...</div>
+
+      <div class="loading-tips">
+        <span class="tip-icon">💡</span>
+        <span id="loading-tip-text">Press [E] or [F] to hop into any anime car and cruise around!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Heads Up Display (HUD) -->
+  <div id="hud" class="hud-container hidden">
+    <!-- Top Bar: Compass & Status -->
+    <header class="hud-top">
+      <div class="compass-container">
+        <div class="compass-ticker">
+          <span class="compass-mark">N</span>
+          <span class="compass-submark">·</span>
+          <span class="compass-mark">NE</span>
+          <span class="compass-submark">·</span>
+          <span class="compass-mark">E</span>
+          <span class="compass-submark">·</span>
+          <span class="compass-mark">SE</span>
+          <span class="compass-submark">·</span>
+          <span class="compass-mark">S</span>
+          <span class="compass-submark">·</span>
+          <span class="compass-mark">SW</span>
+          <span class="compass-submark">·</span>
+          <span class="compass-mark">W</span>
+          <span class="compass-submark">·</span>
+          <span class="compass-mark">NW</span>
+        </div>
+        <div id="district-badge" class="district-badge">🌸 Sakura Residential District</div>
+      </div>
+
+      <!-- Quick Action Toggles -->
+      <div class="top-controls">
+        <button id="btn-time" class="hud-btn" title="Toggle Time of Day (Key: T)">
+          <span class="btn-icon">☀️</span> <span class="btn-label">Noon</span>
+        </button>
+        <button id="btn-radio" class="hud-btn" title="Toggle Lo-Fi Anime Radio (Key: R)">
+          <span class="btn-icon">📻</span> <span class="btn-label">Lo-Fi Cafe</span>
+        </button>
+        <button id="btn-camera" class="hud-btn" title="Switch Camera View (Key: C)">
+          <span class="btn-icon">🎥</span> <span class="btn-label">Orbit</span>
+        </button>
+        <button id="btn-help" class="hud-btn" title="Controls Help (Key: H or Tab)">
+          <span class="btn-icon">❓</span> <span class="btn-label">Help</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Center Interaction Prompt (e.g. "[E] Enter Kei Car") -->
+    <div id="interaction-prompt" class="interaction-prompt hidden">
+      <span class="key-badge">E</span>
+      <span id="prompt-action-text" class="prompt-text">Drive Anime Car</span>
+    </div>
+
+    <!-- Center Crosshair / Focus Dot (subtle) -->
+    <div id="center-reticle" class="center-reticle"></div>
+
+    <!-- Bottom Left: GPS Minimap Radar -->
+    <aside class="hud-bottom-left">
+      <div class="minimap-wrapper">
+        <canvas id="minimap-canvas" width="220" height="220"></canvas>
+        <div class="minimap-overlay">
+          <div class="minimap-ring"></div>
+          <div class="minimap-center-player"></div>
+        </div>
+        <div class="minimap-legend">
+          <span class="legend-item"><span class="dot player-dot"></span> You</span>
+          <span class="legend-item"><span class="dot car-dot"></span> Cars</span>
+          <span class="legend-item"><span class="dot npc-dot"></span> NPCs</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Bottom Right: Driving Gauge / Speedometer (Visible when driving) -->
+    <aside id="speedometer-panel" class="hud-bottom-right hidden">
+      <div class="gauge-container">
+        <svg class="speed-gauge" viewBox="0 0 200 130">
+          <!-- Background arc -->
+          <path class="gauge-bg" d="M 30 110 A 70 70 0 0 1 170 110" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="12" stroke-linecap="round" />
+          <!-- Active value arc -->
+          <path id="gauge-fill" class="gauge-fill" d="M 30 110 A 70 70 0 0 1 170 110" fill="none" stroke="url(#speedGrad)" stroke-width="12" stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" />
+          <defs>
+            <linearGradient id="speedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#4facfe" />
+              <stop offset="50%" stop-color="#00f2fe" />
+              <stop offset="100%" stop-color="#ff007f" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="gauge-readout">
+          <div id="speed-value" class="speed-value">0</div>
+          <div class="speed-unit">KM/H</div>
+        </div>
+        <div class="gear-indicator">
+          <span id="gear-text" class="gear-badge">D</span>
+          <span id="headlight-indicator" class="indicator-icon active" title="Headlights (Key: L)">💡</span>
+          <span id="horn-indicator" class="indicator-icon" title="Honk (Key: H)">📢</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Bottom Center: Active Mode Notification -->
+    <footer class="hud-bottom-center">
+      <div id="hud-message" class="hud-message">
+        🌸 Welcome to OpenSquare! Walk around or press [E] to drive.
+      </div>
+    </footer>
+  </div>
+
+  <!-- Interactive Controls Modal Dialog -->
+  <div id="controls-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">🌸 How to Play OpenSquare</h2>
+        <button id="modal-close-btn" class="modal-close" aria-label="Close Help">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="control-section">
+          <h3>🚶 On Foot Controls</h3>
+          <ul class="control-list">
+            <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>Arrows</kbd> <span>Walk / Move</span></li>
+            <li><kbd>Shift</kbd> <span>Anime Sprint</span></li>
+            <li><kbd>Space</kbd> <span>Jump</span></li>
+            <li><kbd>Mouse</kbd> <span>Orbit & Pan Camera (Click to look)</span></li>
+            <li><kbd>Scroll</kbd> <span>Zoom In / Out</span></li>
+            <li><kbd>E</kbd> or <kbd>F</kbd> <span>Enter Nearby Anime Car</span></li>
+          </ul>
+        </div>
+        <div class="control-section">
+          <h3>🚗 Driving Controls</h3>
+          <ul class="control-list">
+            <li><kbd>W</kbd> / <kbd>↑</kbd> <span>Accelerate Gas</span></li>
+            <li><kbd>S</kbd> / <kbd>↓</kbd> <span>Brake / Reverse</span></li>
+            <li><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> <span>Steer Left / Right</span></li>
+            <li><kbd>Space</kbd> <span>Handbrake / Drift!</span></li>
+            <li><kbd>H</kbd> or <kbd>Ctrl</kbd> <span>Car Horn (Alerts NPCs)</span></li>
+            <li><kbd>L</kbd> <span>Toggle Headlights</span></li>
+            <li><kbd>R</kbd> <span>Anime Lo-Fi Radio Stations</span></li>
+            <li><kbd>C</kbd> <span>Switch Camera Perspective</span></li>
+            <li><kbd>E</kbd> or <kbd>F</kbd> <span>Exit Vehicle</span></li>
+          </ul>
+        </div>
+        <div class="control-section">
+          <h3>🌆 World & Atmosphere</h3>
+          <ul class="control-list">
+            <li><kbd>T</kbd> <span>Cycle Day / Golden Sunset / Cyberpunk Night</span></li>
+            <li><kbd>Tab</kbd> or <kbd>H</kbd> <span>Toggle Controls Help</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-start-btn" class="modal-action-btn">Let's Explore!</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

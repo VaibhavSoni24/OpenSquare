@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4facfe" />
+      <stop offset="50%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#ff7eb3" />
+    </linearGradient>
+    <linearGradient id="squareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f0f4f8" />
+    </linearGradient>
+    <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff5388" />
+      <stop offset="100%" stop-color="#ff7eb3" />
+    </linearGradient>
+    <linearGradient id="sakuraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff9a9e" />
+      <stop offset="100%" stop-color="#fecfef" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bgGrad)" />
+  
+  <!-- Outer subtle glass ring -->
+  <rect x="36" y="36" width="440" height="440" rx="100" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="6" />
+
+  <!-- The Open Square (Island frame) -->
+  <rect x="100" y="100" width="312" height="312" rx="56" fill="url(#squareGrad)" filter="url(#glow)" />
+  
+  <!-- Stylized road winding through the square -->
+  <path d="M 100 280 C 180 280, 200 360, 290 360 C 370 360, 390 230, 412 210" fill="none" stroke="#2c3e50" stroke-width="44" stroke-linecap="round" />
+  <path d="M 100 280 C 180 280, 200 360, 290 360 C 370 360, 390 230, 412 210" fill="none" stroke="#f1c40f" stroke-width="6" stroke-dasharray="16 14" stroke-linecap="round" />
+
+  <!-- Cute Anime Car on road -->
+  <g transform="translate(230, 290) rotate(-15)">
+    <!-- Car shadow -->
+    <ellipse cx="40" cy="46" rx="46" ry="12" fill="rgba(0,0,0,0.25)" />
+    <!-- Car body (Kei-car) -->
+    <rect x="0" y="0" width="80" height="40" rx="14" fill="url(#carGrad)" />
+    <!-- Cabin -->
+    <path d="M 16 0 L 28 -24 L 56 -24 L 68 0 Z" fill="#ffffff" />
+    <path d="M 20 -2 L 30 -20 L 54 -20 L 64 -2 Z" fill="#a0e7e5" />
+    <!-- Cute Eyes/Headlights -->
+    <circle cx="8" cy="18" r="6" fill="#fff" />
+    <circle cx="7" cy="18" r="3" fill="#333" />
+    <circle cx="72" cy="18" r="6" fill="#fff" />
+    <circle cx="73" cy="18" r="3" fill="#333" />
+    <!-- Wheels -->
+    <rect x="12" y="32" width="16" height="12" rx="4" fill="#34495e" />
+    <rect x="52" y="32" width="16" height="12" rx="4" fill="#34495e" />
+    <!-- Blush cheeks -->
+    <ellipse cx="6" cy="27" rx="4" ry="2" fill="#ff4081" opacity="0.6" />
+    <ellipse cx="74" cy="27" rx="4" ry="2" fill="#ff4081" opacity="0.6" />
+  </g>
+
+  <!-- Sakura petals floating -->
+  <g transform="translate(140, 150) rotate(20) scale(0.9)">
+    <path d="M 0 0 C -15 -25, 15 -25, 0 0 C -25 -15, -25 15, 0 0 C 15 25, -15 25, 0 0 C 25 -15, 25 15, 0 0" fill="url(#sakuraGrad)" />
+    <circle cx="0" cy="0" r="4" fill="#ff6b81" />
+  </g>
+  <g transform="translate(340, 140) rotate(-35) scale(0.7)">
+    <path d="M 0 0 C -15 -25, 15 -25, 0 0 C -25 -15, -25 15, 0 0 C 15 25, -15 25, 0 0 C 25 -15, 25 15, 0 0" fill="url(#sakuraGrad)" />
+  </g>
+
+  <!-- Anime sparkle stars -->
+  <path d="M 380 90 L 385 105 L 400 110 L 385 115 L 380 130 L 375 115 L 360 110 L 375 105 Z" fill="#ffd166" />
+  <path d="M 120 370 L 123 380 L 133 383 L 123 386 L 120 396 L 117 386 L 107 383 L 117 380 Z" fill="#ffd166" />
+  <circle cx="280" cy="95" r="5" fill="#fff" opacity="0.8" />
+  <circle cx="395" cy="280" r="4" fill="#fff" opacity="0.8" />
+</svg>
