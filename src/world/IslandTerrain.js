@@ -30,7 +30,6 @@ export class IslandTerrain {
       gradientMap: this.assetGen.toonGradient,
       transparent: true,
       opacity: 0.88,
-      roughness: 0.2,
       depthWrite: false
     });
 
@@ -85,8 +84,7 @@ export class IslandTerrain {
 
     const grassMat = new THREE.MeshToonMaterial({
       map: this.assetGen.getGrassTexture(),
-      gradientMap: this.assetGen.toonGradient,
-      roughness: 0.8
+      gradientMap: this.assetGen.toonGradient
     });
 
     this.islandMesh = new THREE.Mesh(islandGeo, grassMat);
@@ -101,8 +99,7 @@ export class IslandTerrain {
 
     const sandMat = new THREE.MeshToonMaterial({
       color: 0xfde047, // Warm golden anime sand
-      gradientMap: this.assetGen.toonGradient,
-      roughness: 0.9
+      gradientMap: this.assetGen.toonGradient
     });
 
     this.beachesMesh = new THREE.Mesh(beachGeo, sandMat);

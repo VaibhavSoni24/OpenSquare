@@ -267,8 +267,7 @@ export class RoadNetwork {
   generateRoadGeometry() {
     const roadMat = new THREE.MeshToonMaterial({
       map: this.assetGen.getRoadTexture(),
-      gradientMap: this.assetGen.toonGradient,
-      roughness: 0.7
+      gradientMap: this.assetGen.toonGradient
     });
 
     // 1. Downtown Roads (X and Z avenues)
@@ -303,8 +302,7 @@ export class RoadNetwork {
     highwayGeo.rotateX(-Math.PI / 2);
     const hwyMat = new THREE.MeshToonMaterial({
       map: this.assetGen.getRoadTexture(),
-      gradientMap: this.assetGen.toonGradient,
-      roughness: 0.7
+      gradientMap: this.assetGen.toonGradient
     });
     const hwyMesh = new THREE.Mesh(highwayGeo, hwyMat);
     hwyMesh.position.y = 0.85;
@@ -323,8 +321,7 @@ export class RoadNetwork {
 
     const pavementMat = new THREE.MeshToonMaterial({
       map: this.assetGen.getPavementTexture(),
-      gradientMap: this.assetGen.toonGradient,
-      roughness: 0.8
+      gradientMap: this.assetGen.toonGradient
     });
 
     // Add crosswalks at each downtown intersection

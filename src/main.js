@@ -1,9 +1,11 @@
+import * as THREE from 'three';
 import { Engine } from './core/Engine.js';
 import { InputManager } from './core/InputManager.js';
 import { AudioManager } from './core/AudioManager.js';
 import { AssetGenerator } from './core/AssetGenerator.js';
 import { World } from './world/World.js';
 import { Player } from './entities/Player.js';
+import { Vehicle } from './entities/Vehicle.js';
 import { TrafficSystem } from './entities/TrafficSystem.js';
 import { PedestrianSystem } from './entities/PedestrianSystem.js';
 import { ThirdPersonCamera } from './camera/ThirdPersonCamera.js';
@@ -65,6 +67,22 @@ class Game {
         this.world.roads,
         this.audio
       );
+
+      // Spawn a cute starter anime car parked on curbside near player
+      const starterCar = new Vehicle(this.engine.scene, this.assetGen, this.world, {
+        type: 'kei',
+        color: 0xff5388,
+        position: new THREE.Vector3(4.5, 0.85, 3.5),
+        rotation: 0
+      });
+      this.traffic.cars.push({
+        vehicle: starterCar,
+        currentWp: null,
+        targetWp: null,
+        cruisingSpeed: 8.0,
+        targetSpeed: 0,
+        blockedTimer: 0
+      });
 
       this.pedestrians = new PedestrianSystem(
         this.engine.scene,

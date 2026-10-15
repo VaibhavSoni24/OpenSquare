@@ -52,8 +52,7 @@ export class CityBuilder {
       const geo = new THREE.BoxGeometry(cfg.w, cfg.h, cfg.d);
       const mat = new THREE.MeshToonMaterial({
         map: this.assetGen.getFacadeTexture(cfg.pal),
-        gradientMap: this.assetGen.toonGradient,
-        roughness: 0.5
+        gradientMap: this.assetGen.toonGradient
       });
       const tower = new THREE.Mesh(geo, mat);
       tower.position.y = cfg.h / 2;
@@ -193,7 +192,7 @@ export class CityBuilder {
     const museumGroup = new THREE.Group();
     museumGroup.position.set(mx, my, mz);
 
-    const marbleMat = this.assetGen.createToonMaterial(0xf8fafc, { roughness: 0.3 });
+    const marbleMat = this.assetGen.createToonMaterial(0xf8fafc);
     const goldMat = this.assetGen.createToonMaterial(0xf59e0b);
     const domeMat = this.assetGen.createToonMaterial(0x06b6d4);
 

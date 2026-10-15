@@ -215,13 +215,14 @@ export class Player {
   detectNearbyVehicle(vehicles) {
     this.nearbyVehicle = null;
     const playerPos = this.root.position;
+    let closestDist = 5.5;
 
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i];
       const dist = playerPos.distanceTo(v.root.position);
-      if (dist < 4.2) {
+      if (dist < closestDist) {
+        closestDist = dist;
         this.nearbyVehicle = v;
-        break;
       }
     }
   }

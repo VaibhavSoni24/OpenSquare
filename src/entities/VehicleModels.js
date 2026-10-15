@@ -4,7 +4,7 @@ export class VehicleModels {
   static create(assetGen, type = 'kei', color = 0xff7eb3) {
     const group = new THREE.Group();
 
-    const bodyMat = assetGen.createToonMaterial(color, { roughness: 0.3 });
+    const bodyMat = assetGen.createToonMaterial(color);
     const darkMat = assetGen.createToonMaterial(0x1e293b);
     const glassMat = assetGen.createToonMaterial(0xa5f3fc, { transparent: true, opacity: 0.75 });
     const chromeMat = assetGen.createToonMaterial(0xe2e8f0);
