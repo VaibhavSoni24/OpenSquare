@@ -43,6 +43,7 @@ class Game {
 
       // 3. Initialize HUD & Audio hooks
       this.hud = new HUD(this.world, this.world.roads, this.audio, this.cameraSystem);
+      window.showGameNotification = (msg) => this.hud.showMessage(msg);
       this.hud.setLoadingProgress(45, 'Generating Sakura Districts & Architecture...');
 
       await new Promise(r => setTimeout(r, 150));

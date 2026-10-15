@@ -10,47 +10,47 @@ export class RoadNetwork {
     this.pedestrianWaypoints = [];
     this.intersections = [];
     this.roadMeshes = [];
+    this.roadColliders = []; // Railing & barrier colliders
 
     this.init();
   }
 
   init() {
     this.buildWaypointGraph();
-    this.build3DRoadMeshes();
+    this.build3DRoadAndBridgeMeshes();
   }
 
   buildWaypointGraph() {
     // -------------------------------------------------------------
-    // 1. Grand Central Roundabout (Traffic Circle at x: 0, z: 0)
+    // 1. Grand Central Roundabout (Radius: 40m at x: 0, z: 0)
     // -------------------------------------------------------------
-    const rbRadius = 34;
-    const rbNodes = 16;
+    const rbRadius = 40;
+    const rbNodes = 20;
     const rbOuterWaypoints = [];
     const rbInnerWaypoints = [];
 
     for (let i = 0; i < rbNodes; i++) {
       const ang = (i / rbNodes) * Math.PI * 2;
-      // Clockwise traffic flow
-      const xOut = Math.cos(ang) * (rbRadius + 2.8);
-      const zOut = Math.sin(ang) * (rbRadius + 2.8);
-      const xIn = Math.cos(ang) * (rbRadius - 2.8);
-      const zIn = Math.sin(ang) * (rbRadius - 2.8);
+      const xOut = Math.cos(ang) * (rbRadius + 3.2);
+      const zOut = Math.sin(ang) * (rbRadius + 3.2);
+      const xIn = Math.cos(ang) * (rbRadius - 3.2);
+      const zIn = Math.sin(ang) * (rbRadius - 3.2);
 
       const y = this.terrain.getElevation(xOut, zOut) + 0.12;
+      const dir = new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang)).normalize();
 
       const wpOut = {
         id: `rb_out_${i}`,
         position: new THREE.Vector3(xOut, y, zOut),
-        direction: new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang)).normalize(),
-        speedLimit: 8.0,
+        direction: dir.clone(),
+        speedLimit: 9.0,
         next: []
       };
-
       const wpIn = {
         id: `rb_in_${i}`,
         position: new THREE.Vector3(xIn, y, zIn),
-        direction: new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang)).normalize(),
-        speedLimit: 8.0,
+        direction: dir.clone(),
+        speedLimit: 9.0,
         next: []
       };
 
@@ -59,12 +59,10 @@ export class RoadNetwork {
       this.carWaypoints.push(wpOut, wpIn);
     }
 
-    // Connect roundabout ring loops
     for (let i = 0; i < rbNodes; i++) {
       const nextIdx = (i + 1) % rbNodes;
       rbOuterWaypoints[i].next.push(rbOuterWaypoints[nextIdx]);
       rbInnerWaypoints[i].next.push(rbInnerWaypoints[nextIdx]);
-      // Lane change options
       if (i % 2 === 0) {
         rbOuterWaypoints[i].next.push(rbInnerWaypoints[nextIdx]);
         rbInnerWaypoints[i].next.push(rbOuterWaypoints[nextIdx]);
@@ -72,40 +70,35 @@ export class RoadNetwork {
     }
 
     // -------------------------------------------------------------
-    // 2. Coastal Highway Loop (Expansive curved ring at radius ~370m)
+    // 2. Extra-Large Coastal Highway Loop (Radius ~650m)
     // -------------------------------------------------------------
-    const hwyRadius = 370;
-    const hwyNodes = 40;
+    const hwyRadius = 650;
+    const hwyNodes = 48;
     const hwyOuter = [];
     const hwyInner = [];
 
     for (let i = 0; i < hwyNodes; i++) {
       const ang = (i / hwyNodes) * Math.PI * 2;
-      // Scenic natural curvature
-      const r = hwyRadius + Math.sin(ang * 4) * 25 + Math.cos(ang * 2) * 15;
+      const r = hwyRadius + Math.sin(ang * 3) * 35 + Math.cos(ang * 2) * 20;
       const x = Math.cos(ang) * r;
       const z = Math.sin(ang) * r;
       const y = this.terrain.getElevation(x, z) + 0.12;
 
       const dir = new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang)).normalize();
-      const normal = new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).normalize();
-
-      const pOut = new THREE.Vector3(x, y, z).add(normal.clone().multiplyScalar(3.5));
-      const pIn = new THREE.Vector3(x, y, z).add(normal.clone().multiplyScalar(-3.5));
+      const norm = new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).normalize();
 
       const wpOut = {
         id: `hwy_cw_${i}`,
-        position: pOut,
+        position: new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(4.0)),
         direction: dir.clone(),
-        speedLimit: 16.0, // Highway cruising
+        speedLimit: 18.0, // Fast scenic coastal cruise
         next: []
       };
-
       const wpIn = {
         id: `hwy_ccw_${i}`,
-        position: pIn,
+        position: new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(-4.0)),
         direction: dir.clone().negate(),
-        speedLimit: 16.0,
+        speedLimit: 18.0,
         next: []
       };
 
@@ -120,22 +113,76 @@ export class RoadNetwork {
     }
 
     // -------------------------------------------------------------
-    // 3. Arterial Boulevards connecting Roundabout to Highway & Districts
+    // 3. Four Grand Arterial Avenues (Length 550m each)
     // -------------------------------------------------------------
-    // North Avenue (To Downtown Skyscrapers & North Highway)
-    this.createArterialBranch('north', 0, -38, 0, -350, rbOuterWaypoints[12], hwyOuter[30]);
-    // South Avenue (To Central Park & South Highway)
-    this.createArterialBranch('south', 0, 38, 0, 350, rbOuterWaypoints[4], hwyOuter[10]);
-    // East Avenue (To Sakura Residential District & East Highway)
-    this.createArterialBranch('east', 38, 0, 350, 0, rbOuterWaypoints[0], hwyOuter[0]);
-    // West Avenue (To Commercial Harbor & West Highway)
-    this.createArterialBranch('west', -38, 0, -350, 0, rbOuterWaypoints[8], hwyOuter[20]);
+    this.createArterialBranch('north', 0, -46, 0, -620, rbOuterWaypoints[15], hwyOuter[36]);
+    this.createArterialBranch('south', 0, 46, 0, 620, rbOuterWaypoints[5], hwyOuter[12]);
+    this.createArterialBranch('east', 46, 0, 620, 0, rbOuterWaypoints[0], hwyOuter[0]);
+    this.createArterialBranch('west', -46, 0, -620, 0, rbOuterWaypoints[10], hwyOuter[24]);
 
     // -------------------------------------------------------------
-    // 4. Downtown City Grid & Commercial Avenues
+    // 4. Mount Sakura Mountain Switchback Pass (Ascending to y = 32m)
     // -------------------------------------------------------------
-    const dtXs = [-160, -90, -30];
-    const dtZs = [-160, -90, -30];
+    const mtnPoints = [
+      new THREE.Vector3(120, 1.1, -220),
+      new THREE.Vector3(160, 6.5, -280),
+      new THREE.Vector3(210, 14.0, -320),
+      new THREE.Vector3(170, 21.0, -380), // Hairpin 1
+      new THREE.Vector3(230, 27.0, -410), // Hairpin 2
+      new THREE.Vector3(275, 32.5, -450)  // Shrine Terrace Peak
+    ];
+
+    for (let i = 0; i < mtnPoints.length - 1; i++) {
+      const p1 = mtnPoints[i];
+      const p2 = mtnPoints[i + 1];
+      const dir = new THREE.Vector3().subVectors(p2, p1).normalize();
+      const norm = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
+
+      const wpClimb = {
+        id: `mtn_up_${i}`,
+        position: p1.clone().add(norm.clone().multiplyScalar(3.0)),
+        direction: dir.clone(),
+        speedLimit: 9.0, // Switchback control
+        next: []
+      };
+      const wpDescend = {
+        id: `mtn_down_${i}`,
+        position: p2.clone().add(norm.clone().multiplyScalar(-3.0)),
+        direction: dir.clone().negate(),
+        speedLimit: 9.0,
+        next: []
+      };
+
+      this.carWaypoints.push(wpClimb, wpDescend);
+
+      // Mountain pedestrian path
+      this.pedestrianWaypoints.push({
+        id: `mtn_ped_${i}`,
+        position: p1.clone().add(norm.clone().multiplyScalar(6.5)),
+        next: []
+      });
+    }
+
+    for (let i = 0; i < mtnPoints.length - 2; i++) {
+      const u1 = this.carWaypoints.find(w => w.id === `mtn_up_${i}`);
+      const u2 = this.carWaypoints.find(w => w.id === `mtn_up_${i + 1}`);
+      if (u1 && u2) u1.next.push(u2);
+
+      const d1 = this.carWaypoints.find(w => w.id === `mtn_down_${i + 1}`);
+      const d2 = this.carWaypoints.find(w => w.id === `mtn_down_${i}`);
+      if (d1 && d2) d1.next.push(d2);
+    }
+
+    // Connect Mountain road to North Avenue
+    const mtnStart = this.carWaypoints.find(w => w.id === `mtn_up_0`);
+    const northArtWp = this.carWaypoints.find(w => w.id === `art_north_fwd_2`);
+    if (mtnStart && northArtWp) northArtWp.next.push(mtnStart);
+
+    // -------------------------------------------------------------
+    // 5. Metropolis Downtown Commercial Grid
+    // -------------------------------------------------------------
+    const dtXs = [-280, -190, -100];
+    const dtZs = [-120, -30, 60, 150];
 
     dtXs.forEach((x, xi) => {
       dtZs.forEach((z, zi) => {
@@ -148,7 +195,6 @@ export class RoadNetwork {
         };
         this.intersections.push(intersection);
 
-        // North-South Lanes
         const nsFwd = {
           id: `dt_ns_fwd_${xi}_${zi}`,
           position: new THREE.Vector3(x + 3.2, y, z),
@@ -166,7 +212,6 @@ export class RoadNetwork {
           next: []
         };
 
-        // East-West Lanes
         const ewFwd = {
           id: `dt_ew_fwd_${xi}_${zi}`,
           position: new THREE.Vector3(x, y, z + 3.2),
@@ -186,12 +231,12 @@ export class RoadNetwork {
 
         this.carWaypoints.push(nsFwd, nsRev, ewFwd, ewRev);
 
-        // Sidewalk corner waypoints
+        // Sidewalk waypoints
         const peds = [
-          { dx: -7.5, dz: -7.5 },
-          { dx: 7.5, dz: -7.5 },
-          { dx: 7.5, dz: 7.5 },
-          { dx: -7.5, dz: 7.5 }
+          { dx: -8.0, dz: -8.0 },
+          { dx: 8.0, dz: -8.0 },
+          { dx: 8.0, dz: 8.0 },
+          { dx: -8.0, dz: 8.0 }
         ];
         peds.forEach((p, pi) => {
           this.pedestrianWaypoints.push({
@@ -203,7 +248,7 @@ export class RoadNetwork {
       });
     });
 
-    // Connect Downtown Grid internal waypoints
+    // Connect Downtown Grid waypoints
     for (let xi = 0; xi < dtXs.length; xi++) {
       for (let zi = 0; zi < dtZs.length; zi++) {
         if (zi < dtZs.length - 1) {
@@ -230,15 +275,16 @@ export class RoadNetwork {
     }
 
     // -------------------------------------------------------------
-    // 5. Sakura Residential Winding Avenue Network (South-East)
+    // 6. Sakura Old Town Winding Suburban Roads (South-East)
     // -------------------------------------------------------------
     const resPoints = [
-      new THREE.Vector3(45, 1.1, 45),
-      new THREE.Vector3(95, 1.1, 65),
-      new THREE.Vector3(145, 1.1, 95),
-      new THREE.Vector3(195, 1.1, 140),
-      new THREE.Vector3(230, 1.1, 195),
-      new THREE.Vector3(250, 1.1, 260)
+      new THREE.Vector3(60, 1.1, 60),
+      new THREE.Vector3(130, 1.3, 90),
+      new THREE.Vector3(200, 1.6, 130),
+      new THREE.Vector3(260, 2.0, 190),
+      new THREE.Vector3(330, 2.4, 260),
+      new THREE.Vector3(410, 2.8, 340),
+      new THREE.Vector3(480, 2.5, 430)
     ];
 
     for (let i = 0; i < resPoints.length - 1; i++) {
@@ -248,14 +294,14 @@ export class RoadNetwork {
       const norm = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
 
       const wpFwd = {
-        id: `sakura_fwd_${i}`,
+        id: `res_fwd_${i}`,
         position: p1.clone().add(norm.clone().multiplyScalar(3.2)),
         direction: dir.clone(),
         speedLimit: 8.5,
         next: []
       };
       const wpRev = {
-        id: `sakura_rev_${i}`,
+        id: `res_rev_${i}`,
         position: p2.clone().add(norm.clone().multiplyScalar(-3.2)),
         direction: dir.clone().negate(),
         speedLimit: 8.5,
@@ -264,29 +310,27 @@ export class RoadNetwork {
 
       this.carWaypoints.push(wpFwd, wpRev);
 
-      // Residential sidewalk waypoints
       this.pedestrianWaypoints.push({
-        id: `sakura_ped_${i}`,
-        position: p1.clone().add(norm.clone().multiplyScalar(6.5)),
+        id: `res_ped_${i}`,
+        position: p1.clone().add(norm.clone().multiplyScalar(6.8)),
         next: []
       });
     }
 
-    // Connect residential chain
     for (let i = 0; i < resPoints.length - 2; i++) {
-      const fwd1 = this.carWaypoints.find(w => w.id === `sakura_fwd_${i}`);
-      const fwd2 = this.carWaypoints.find(w => w.id === `sakura_fwd_${i + 1}`);
-      if (fwd1 && fwd2) fwd1.next.push(fwd2);
+      const f1 = this.carWaypoints.find(w => w.id === `res_fwd_${i}`);
+      const f2 = this.carWaypoints.find(w => w.id === `res_fwd_${i + 1}`);
+      if (f1 && f2) f1.next.push(f2);
 
-      const rev1 = this.carWaypoints.find(w => w.id === `sakura_rev_${i + 1}`);
-      const rev2 = this.carWaypoints.find(w => w.id === `sakura_rev_${i}`);
-      if (rev1 && rev2) rev1.next.push(rev2);
+      const r1 = this.carWaypoints.find(w => w.id === `res_rev_${i + 1}`);
+      const r2 = this.carWaypoints.find(w => w.id === `res_rev_${i}`);
+      if (r1 && r2) r1.next.push(r2);
     }
 
     // Connect Sakura road to Roundabout and Highway
-    const sakuraStart = this.carWaypoints.find(w => w.id === `sakura_fwd_0`);
-    if (sakuraStart && rbOuterWaypoints[2]) {
-      rbOuterWaypoints[2].next.push(sakuraStart);
+    const resStart = this.carWaypoints.find(w => w.id === `res_fwd_0`);
+    if (resStart && rbOuterWaypoints[3]) {
+      rbOuterWaypoints[3].next.push(resStart);
     }
 
     // Interconnect pedestrian sidewalk waypoints
@@ -295,7 +339,7 @@ export class RoadNetwork {
       for (let j = i + 1; j < this.pedestrianWaypoints.length; j++) {
         const p2 = this.pedestrianWaypoints[j];
         const dist = p1.position.distanceTo(p2.position);
-        if (dist < 45 && dist > 1.5) {
+        if (dist < 48 && dist > 1.8) {
           p1.next.push(p2);
           p2.next.push(p1);
         }
@@ -304,7 +348,7 @@ export class RoadNetwork {
   }
 
   createArterialBranch(name, x1, z1, x2, z2, rbWp, hwyWp) {
-    const steps = 6;
+    const steps = 8;
     const fwdList = [];
     const revList = [];
 
@@ -317,21 +361,18 @@ export class RoadNetwork {
       const dir = new THREE.Vector3(x2 - x1, 0, z2 - z1).normalize();
       const norm = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
 
-      const posFwd = new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(3.4));
-      const posRev = new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(-3.4));
-
       const wpF = {
         id: `art_${name}_fwd_${s}`,
-        position: posFwd,
+        position: new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(3.5)),
         direction: dir.clone(),
-        speedLimit: 12.0,
+        speedLimit: 14.0,
         next: []
       };
       const wpR = {
         id: `art_${name}_rev_${s}`,
-        position: posRev,
+        position: new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(-3.5)),
         direction: dir.clone().negate(),
-        speedLimit: 12.0,
+        speedLimit: 14.0,
         next: []
       };
 
@@ -339,30 +380,27 @@ export class RoadNetwork {
       revList.push(wpR);
       this.carWaypoints.push(wpF, wpR);
 
-      // Sidewalk points along arterials
       this.pedestrianWaypoints.push({
         id: `art_ped_${name}_${s}`,
-        position: new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(7.2)),
+        position: new THREE.Vector3(x, y, z).add(norm.clone().multiplyScalar(7.5)),
         next: []
       });
     }
 
-    // Chain links
     for (let s = 0; s < steps; s++) {
       fwdList[s].next.push(fwdList[s + 1]);
       revList[s + 1].next.push(revList[s]);
     }
 
-    // Connect to Roundabout and Highway
     if (rbWp && fwdList[0]) rbWp.next.push(fwdList[0]);
     if (revList[0] && rbWp) revList[0].next.push(rbWp);
     if (hwyWp && fwdList[steps]) fwdList[steps].next.push(hwyWp);
   }
 
   // -------------------------------------------------------------
-  // Solid 3D Road Bed, Curbs & Sidewalk Generation (Zero floating!)
+  // Solid 3D Road Beds, Bridges, Railings & Curbs (Zero floating!)
   // -------------------------------------------------------------
-  build3DRoadMeshes() {
+  build3DRoadAndBridgeMeshes() {
     const roadMat = new THREE.MeshToonMaterial({
       map: this.assetGen.getRoadTexture(),
       gradientMap: this.assetGen.toonGradient
@@ -374,62 +412,56 @@ export class RoadNetwork {
       gradientMap: this.assetGen.toonGradient
     });
 
-    const crosswalkMat = new THREE.MeshToonMaterial({
-      map: this.assetGen.getCrosswalkTexture(),
-      gradientMap: this.assetGen.toonGradient,
-      transparent: true,
-      opacity: 0.95
-    });
+    const bridgeSteelMat = this.assetGen.createToonMaterial(0xef4444); // Iconic Japanese vermilion red steel bridge
+    const railingMat = this.assetGen.createToonMaterial(0xffffff);
 
-    // 1. Central Roundabout 3D Ring
-    const rbInner = 26;
-    const rbOuter = 41;
+    // 1. Grand Central Roundabout (3D Solid Ring & Center Island)
+    const rbInner = 32;
+    const rbOuter = 48;
     const rbGeo = new THREE.RingGeometry(rbInner, rbOuter, 64);
     rbGeo.rotateX(-Math.PI / 2);
     const rbMesh = new THREE.Mesh(rbGeo, roadMat);
-    rbMesh.position.y = 1.08;
+    rbMesh.position.y = 1.09;
     rbMesh.receiveShadow = true;
     this.scene.add(rbMesh);
     this.roadMeshes.push(rbMesh);
 
-    // Roundabout Center Island Plaza (Paved courtyard + fountain)
+    // Center Landscaped Island Plaza
     const centerPlazaGeo = new THREE.CylinderGeometry(rbInner - 0.5, rbInner - 0.5, 0.45, 48);
     const centerPlaza = new THREE.Mesh(centerPlazaGeo, sidewalkMat);
     centerPlaza.position.set(0, 1.2, 0);
     centerPlaza.receiveShadow = true;
 
     // Center fountain inside Roundabout
-    const fountainGeo = new THREE.CylinderGeometry(8, 8.5, 1.4, 24);
+    const fountainGeo = new THREE.CylinderGeometry(10, 10.5, 1.6, 24);
     const fountainMat = this.assetGen.createToonMaterial(0xffffff);
     const fountain = new THREE.Mesh(fountainGeo, fountainMat);
-    fountain.position.set(0, 1.8, 0);
+    fountain.position.set(0, 1.9, 0);
 
-    const waterGeo = new THREE.CylinderGeometry(7.6, 7.6, 1.2, 24);
-    const waterMat = this.assetGen.createToonMaterial(0x38bdf8, { transparent: true, opacity: 0.85 });
+    const waterGeo = new THREE.CylinderGeometry(9.6, 9.6, 1.4, 24);
+    const waterMat = this.assetGen.createToonMaterial(0x38bdf8, { transparent: true, opacity: 0.88 });
     const water = new THREE.Mesh(waterGeo, waterMat);
-    water.position.set(0, 1.9, 0);
+    water.position.set(0, 2.0, 0);
     this.scene.add(centerPlaza, fountain, water);
 
-    // 2. Coastal Highway Curved 3D Ring (Radius: 360m~376m, Width: 16m)
-    const hwyGeo = new THREE.RingGeometry(358, 376, 96);
+    // 2. Coastal Highway Curved 3D Ring (Radius: 638m ~ 662m, Width: 24m)
+    const hwyGeo = new THREE.RingGeometry(638, 662, 128);
     hwyGeo.rotateX(-Math.PI / 2);
     const hwyMesh = new THREE.Mesh(hwyGeo, roadMat);
-    hwyMesh.position.y = 1.08;
+    hwyMesh.position.y = 1.09;
     hwyMesh.receiveShadow = true;
     this.scene.add(hwyMesh);
     this.roadMeshes.push(hwyMesh);
 
     // 3. Four Major Arterial Avenues (North, South, East, West) with Curbs & Sidewalks
     const makeAvenue = (x, z, length, isHorizontal) => {
-      const roadW = 14;
+      const roadW = 15;
       const curbW = 0.6;
-      const walkW = 4.5;
-      const totalW = roadW + (curbW + walkW) * 2;
+      const walkW = 4.8;
 
-      // Asphalt Road Slab (Solid box sitting flush on terrain!)
       const roadBoxGeo = new THREE.BoxGeometry(
         isHorizontal ? length : roadW,
-        0.18,
+        0.2,
         isHorizontal ? roadW : length
       );
       const roadSlab = new THREE.Mesh(roadBoxGeo, roadMat);
@@ -438,13 +470,12 @@ export class RoadNetwork {
       this.scene.add(roadSlab);
       this.roadMeshes.push(roadSlab);
 
-      // Raised Concrete Curbs (Beveled edge steps)
+      // Concrete Curbs
       const curbGeo = new THREE.BoxGeometry(
         isHorizontal ? length : curbW,
-        0.32,
+        0.34,
         isHorizontal ? curbW : length
       );
-
       const curb1 = new THREE.Mesh(curbGeo, curbMat);
       const curb2 = new THREE.Mesh(curbGeo, curbMat);
       if (isHorizontal) {
@@ -456,86 +487,170 @@ export class RoadNetwork {
       }
       this.scene.add(curb1, curb2);
 
-      // Raised Paved Sidewalks
+      // Sidewalks
       const walkGeo = new THREE.BoxGeometry(
         isHorizontal ? length : walkW,
-        0.28,
+        0.3,
         isHorizontal ? walkW : length
       );
       const walk1 = new THREE.Mesh(walkGeo, sidewalkMat);
       const walk2 = new THREE.Mesh(walkGeo, sidewalkMat);
       if (isHorizontal) {
-        walk1.position.set(x, 1.14, z - (roadW / 2 + curbW + walkW / 2));
-        walk2.position.set(x, 1.14, z + (roadW / 2 + curbW + walkW / 2));
+        walk1.position.set(x, 1.15, z - (roadW / 2 + curbW + walkW / 2));
+        walk2.position.set(x, 1.15, z + (roadW / 2 + curbW + walkW / 2));
       } else {
-        walk1.position.set(x - (roadW / 2 + curbW + walkW / 2), 1.14, z);
-        walk2.position.set(x + (roadW / 2 + curbW + walkW / 2), 1.14, z);
+        walk1.position.set(x - (roadW / 2 + curbW + walkW / 2), 1.15, z);
+        walk2.position.set(x + (roadW / 2 + curbW + walkW / 2), 1.15, z);
       }
       walk1.receiveShadow = true;
       walk2.receiveShadow = true;
       this.scene.add(walk1, walk2);
     };
 
-    // North Arterial (Downtown)
-    makeAvenue(0, -195, 310, false);
-    // South Arterial (Central Park)
-    makeAvenue(0, 195, 310, false);
-    // East Arterial (Sakura Residential)
-    makeAvenue(195, 0, 310, true);
-    // West Arterial (Commercial Harbor)
-    makeAvenue(-195, 0, 310, true);
+    // North Avenue (Length: 560m)
+    makeAvenue(0, -330, 560, false);
+    // South Avenue (Length: 560m)
+    makeAvenue(0, 330, 560, false);
+    // East Avenue (Length: 560m)
+    makeAvenue(330, 0, 560, true);
+    // West Avenue (Length: 560m)
+    makeAvenue(-330, 0, 560, true);
 
-    // 4. Downtown Internal Streets
-    const downtownXs = [-160, -90, -30];
-    const downtownZs = [-160, -90, -30];
+    // 4. Downtown Streets
+    const downtownXs = [-280, -190, -100];
+    const downtownZs = [-120, -30, 60, 150];
 
     downtownXs.forEach(x => {
-      makeAvenue(x, -95, 170, false);
+      makeAvenue(x, 15, 300, false);
     });
     downtownZs.forEach(z => {
-      makeAvenue(-95, z, 170, true);
+      makeAvenue(-190, z, 200, true);
     });
 
-    // 5. Crosswalks at Downtown Intersections
-    this.intersections.forEach(inter => {
-      const offsets = [
-        { x: 0, z: -10, rot: 0 },
-        { x: 0, z: 10, rot: 0 },
-        { x: -10, z: 0, rot: Math.PI / 2 },
-        { x: 10, z: 0, rot: Math.PI / 2 }
-      ];
+    // 5. Grand Metropolis River Bridge (Crossing river at x: -330, z: -40)
+    this.buildRiverBridge(bridgeSteelMat, roadMat, sidewalkMat);
 
-      offsets.forEach(off => {
-        const cwGeo = new THREE.PlaneGeometry(12, 4.2);
-        cwGeo.rotateX(-Math.PI / 2);
-        const cw = new THREE.Mesh(cwGeo, crosswalkMat);
-        cw.position.set(inter.x + off.x, 1.18, inter.z + off.z);
-        cw.rotation.y = off.rot;
-        cw.receiveShadow = true;
-        this.scene.add(cw);
-      });
-    });
+    // 6. Mountain Switchback Pass (Mount Sakura) with Crash Barriers
+    this.buildMountainPass(roadMat);
 
-    // 6. Sakura Residential Winding Avenue Mesh (Curved Street with Curbs)
-    const curvePoints = [
-      new THREE.Vector3(45, 1.1, 45),
-      new THREE.Vector3(95, 1.1, 65),
-      new THREE.Vector3(145, 1.1, 95),
-      new THREE.Vector3(195, 1.1, 140),
-      new THREE.Vector3(230, 1.1, 195),
-      new THREE.Vector3(250, 1.1, 260)
+    // 7. Sakura Old Town Winding Suburban Roads
+    this.buildSakuraResidentialRoads(roadMat);
+  }
+
+  // Grand Truss River Bridge over River Channel
+  buildRiverBridge(steelMat, roadMat, sidewalkMat) {
+    const bridgeGroup = new THREE.Group();
+    bridgeGroup.position.set(-330, 1.25, -35);
+    bridgeGroup.rotation.y = 0.38; // Matches river perpendicular
+
+    // Solid Bridge Deck (Length: 48m, Width: 18m)
+    const deckGeo = new THREE.BoxGeometry(18, 0.8, 52);
+    const deck = new THREE.Mesh(deckGeo, roadMat);
+    deck.receiveShadow = true;
+    bridgeGroup.add(deck);
+
+    // Heavy Concrete Abutments on both river banks
+    const abutMat = this.assetGen.createToonMaterial(0x475569);
+    const abutGeo = new THREE.BoxGeometry(22, 5.0, 8);
+    const abut1 = new THREE.Mesh(abutGeo, abutMat);
+    abut1.position.set(0, -2.0, -26);
+    const abut2 = new THREE.Mesh(abutGeo, abutMat);
+    abut2.position.set(0, -2.0, 26);
+    bridgeGroup.add(abut1, abut2);
+
+    // Red Steel Arched Trusses & Overhead Beams
+    const trussGeo = new THREE.BoxGeometry(0.8, 6.5, 52);
+    const trussL = new THREE.Mesh(trussGeo, steelMat);
+    trussL.position.set(-9.2, 3.2, 0);
+    const trussR = new THREE.Mesh(trussGeo, steelMat);
+    trussR.position.set(9.2, 3.2, 0);
+    bridgeGroup.add(trussL, trussR);
+
+    // Cross beams overhead
+    for (let c = -20; c <= 20; c += 10) {
+      const beamGeo = new THREE.BoxGeometry(18.4, 0.6, 0.8);
+      const beam = new THREE.Mesh(beamGeo, steelMat);
+      beam.position.set(0, 6.4, c);
+      bridgeGroup.add(beam);
+    }
+
+    this.scene.add(bridgeGroup);
+
+    // Add Bridge Railing Colliders so player/car cannot fall into river!
+    this.roadColliders.push(
+      new THREE.Box3(new THREE.Vector3(-342, 1.0, -60), new THREE.Vector3(-336, 6.0, -10)),
+      new THREE.Box3(new THREE.Vector3(-324, 1.0, -60), new THREE.Vector3(-318, 6.0, -10))
+    );
+  }
+
+  // Mountain Switchback Road Climbing Mount Sakura with Safety Guardrails
+  buildMountainPass(roadMat) {
+    const barrierMat = this.assetGen.createToonMaterial(0xdc2626); // Red and white barrier
+    const mtnPoints = [
+      new THREE.Vector3(120, 1.1, -220),
+      new THREE.Vector3(160, 6.5, -280),
+      new THREE.Vector3(210, 14.0, -320),
+      new THREE.Vector3(170, 21.0, -380),
+      new THREE.Vector3(230, 27.0, -410),
+      new THREE.Vector3(275, 32.5, -450)
     ];
 
-    for (let i = 0; i < curvePoints.length - 1; i++) {
-      const p1 = curvePoints[i];
-      const p2 = curvePoints[i + 1];
+    for (let i = 0; i < mtnPoints.length - 1; i++) {
+      const p1 = mtnPoints[i];
+      const p2 = mtnPoints[i + 1];
+      const length = p1.distanceTo(p2);
+      const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+      const angle = Math.atan2(p2.x - p1.x, p2.z - p1.z);
+
+      // Road bed slab
+      const mtnRoadGeo = new THREE.BoxGeometry(11.5, 0.25, length + 2);
+      const mtnRoad = new THREE.Mesh(mtnRoadGeo, roadMat);
+      mtnRoad.position.copy(mid);
+      mtnRoad.rotation.y = angle;
+      mtnRoad.receiveShadow = true;
+      this.scene.add(mtnRoad);
+      this.roadMeshes.push(mtnRoad);
+
+      // Red/White Crash Barrier along cliff edge
+      const barGeo = new THREE.BoxGeometry(0.4, 1.1, length + 2);
+      const barrier = new THREE.Mesh(barGeo, barrierMat);
+      const norm = new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle)).normalize();
+      barrier.position.copy(mid).add(norm.clone().multiplyScalar(5.9));
+      barrier.position.y += 0.55;
+      barrier.rotation.y = angle;
+      this.scene.add(barrier);
+
+      // Barrier collider along cliff edge
+      const bPos = barrier.position;
+      this.roadColliders.push(new THREE.Box3(
+        new THREE.Vector3(bPos.x - 2.0, bPos.y - 0.5, bPos.z - 2.0),
+        new THREE.Vector3(bPos.x + 2.0, bPos.y + 3.0, bPos.z + 2.0)
+      ));
+    }
+  }
+
+  // Sakura Old Town Winding Suburban Roads
+  buildSakuraResidentialRoads(roadMat) {
+    const resPoints = [
+      new THREE.Vector3(60, 1.1, 60),
+      new THREE.Vector3(130, 1.3, 90),
+      new THREE.Vector3(200, 1.6, 130),
+      new THREE.Vector3(260, 2.0, 190),
+      new THREE.Vector3(330, 2.4, 260),
+      new THREE.Vector3(410, 2.8, 340),
+      new THREE.Vector3(480, 2.5, 430)
+    ];
+
+    for (let i = 0; i < resPoints.length - 1; i++) {
+      const p1 = resPoints[i];
+      const p2 = resPoints[i + 1];
       const segLength = p1.distanceTo(p2);
       const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
       const angle = Math.atan2(p2.x - p1.x, p2.z - p1.z);
 
-      const segGeo = new THREE.BoxGeometry(11, 0.16, segLength + 1);
+      const segGeo = new THREE.BoxGeometry(12, 0.2, segLength + 2);
       const segMesh = new THREE.Mesh(segGeo, roadMat);
-      segMesh.position.set(mid.x, 1.1, mid.z);
+      segMesh.position.copy(mid);
       segMesh.rotation.y = angle;
       segMesh.receiveShadow = true;
       this.scene.add(segMesh);
@@ -544,7 +659,6 @@ export class RoadNetwork {
   }
 
   update(delta) {
-    // Cycle traffic light signals
     for (let i = 0; i < this.intersections.length; i++) {
       const inter = this.intersections[i];
       inter.timer += delta;
@@ -559,5 +673,20 @@ export class RoadNetwork {
         inter.state = 'yellow_ew';
       }
     }
+  }
+
+  // Check road barrier and bridge railing collision
+  checkCollision(pos, radius = 0.8) {
+    const box = new THREE.Box3(
+      new THREE.Vector3(pos.x - radius, pos.y, pos.z - radius),
+      new THREE.Vector3(pos.x + radius, pos.y + 2.2, pos.z + radius)
+    );
+
+    for (let i = 0; i < this.roadColliders.length; i++) {
+      if (this.roadColliders[i].intersectsBox(box)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -121,12 +121,23 @@ export class Vehicle {
     const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.root.rotation.y);
     const nextPos = this.root.position.clone().add(forward.clone().multiplyScalar(this.speed * delta));
 
-    // Check building collisions
-    if (!this.world.checkCollision(nextPos, 1.2)) {
+    // Check building and water collisions
+    const isWaterAhead = this.world.terrain.isWater(nextPos.x, nextPos.z);
+    if (!this.world.checkCollision(nextPos, 1.3) && !isWaterAhead) {
       this.root.position.copy(nextPos);
     } else {
-      // Rebound / halt on crash
+      // Rebound / halt on crash or water bank
       this.speed = -this.speed * 0.35;
+    }
+
+    // Water Safety Check (recover if vehicle plunged into water)
+    if (this.world.terrain.isWater(this.root.position.x, this.root.position.z)) {
+      const safeShore = this.world.terrain.getNearestShore(this.root.position.x, this.root.position.z);
+      this.setPosition(safeShore.x, safeShore.y + 0.15, safeShore.z);
+      this.speed = 0;
+      if (typeof window !== 'undefined' && window.showGameNotification) {
+        window.showGameNotification('🌊 Vehicle recovered to safe road/shore!');
+      }
     }
 
     // 4. Ground elevation & terrain smoothing

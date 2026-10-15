@@ -189,14 +189,31 @@ export class Player {
       this.isGrounded = true;
     }
 
-    // 3. Move X/Z with building collision check
+    // 3. Move X/Z with building and water collision check
     const nextPos = this.root.position.clone().add(
       new THREE.Vector3(this.velocity.x * delta, 0, this.velocity.z * delta)
     );
 
-    if (!this.world.checkCollision(nextPos, 0.6)) {
+    const isIntoWater = this.world.terrain.isWater(nextPos.x, nextPos.z);
+    if (!this.world.checkCollision(nextPos, 0.6) && !isIntoWater) {
       this.root.position.x = nextPos.x;
       this.root.position.z = nextPos.z;
+    } else if (isIntoWater) {
+      // Dampen velocity when bumping against water edge
+      this.velocity.x = 0;
+      this.velocity.z = 0;
+    }
+
+    // 3b. Water Safety Check (If jumping/falling into deep lake, river, or ocean)
+    if (this.world.terrain.isWater(this.root.position.x, this.root.position.z)) {
+      const safeShore = this.world.terrain.getNearestShore(this.root.position.x, this.root.position.z);
+      this.root.position.copy(safeShore);
+      this.velocity.set(0, 0, 0);
+      this.verticalVelocity = 0;
+      this.isGrounded = true;
+      if (typeof window !== 'undefined' && window.showGameNotification) {
+        window.showGameNotification('🌊 Water Hazard! Rescued back safely to shore.');
+      }
     }
 
     // 4. Update procedural animation

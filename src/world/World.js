@@ -23,7 +23,9 @@ export class World {
   }
 
   checkCollision(pos, radius = 0.8) {
-    return this.city.checkCollision(pos, radius);
+    if (this.city.checkCollision(pos, radius)) return true;
+    if (this.roads.checkCollision(pos, radius)) return true;
+    return false;
   }
 
   getCurrentDistrict(x, z) {

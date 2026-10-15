@@ -547,4 +547,282 @@ export class AssetGenerator {
     this.textures.vending = texture;
     return texture;
   }
+
+  // 10. Japanese Police Station ("KOBAN 👮") Facade Texture
+  getPoliceStationTexture() {
+    if (this.textures.police) return this.textures.police;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Clean white & slate facade
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(0, 0, size, size);
+
+    // Dark slate ground foundation
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, size - 80, size, 80);
+
+    // Blue & Gold Police Emblem / Signboard
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(40, 20, size - 80, 70);
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(40, 20, size - 80, 70);
+
+    // Gold Police Star & Text
+    ctx.fillStyle = '#facc15';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('👮 POLICE STATION 🚔', size / 2, 45);
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('交番 KOBAN · CENTRAL DISTRICT', size / 2, 72);
+
+    // Large glass inquiry windows
+    ctx.fillStyle = '#e0f2fe';
+    ctx.fillRect(40, 120, size - 80, 300);
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(40, 120, size - 80, 300);
+
+    // Window muntins
+    ctx.beginPath();
+    ctx.moveTo(size / 2, 120);
+    ctx.lineTo(size / 2, 420);
+    ctx.moveTo(40, 270);
+    ctx.lineTo(size - 40, 270);
+    ctx.stroke();
+
+    // Red Emergency Beacon Light on top
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(size / 2, 12, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.police = texture;
+    return texture;
+  }
+
+  // 11. Hospital & Emergency Center ("+ HOSPITAL 🏥") Facade Texture
+  getHospitalTexture() {
+    if (this.textures.hospital) return this.textures.hospital;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Clinical clean white & teal paneling
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+
+    // Mint/Teal header strip
+    ctx.fillStyle = '#0d9488';
+    ctx.fillRect(0, 0, size, 85);
+
+    // Bold Red Cross Emblem
+    ctx.fillStyle = '#ef4444';
+    const cx = 80;
+    const cy = 42;
+    ctx.fillRect(cx - 8, cy - 26, 16, 52);
+    ctx.fillRect(cx - 26, cy - 8, 52, 16);
+
+    // Hospital Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CENTRAL HOSPITAL', 130, 35);
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('EMERGENCY MEDICAL 24H 🏥', 130, 62);
+
+    // Rows of hospital windows
+    const cols = 6;
+    const rows = 4;
+    const pad = 18;
+    const winW = (size - pad * (cols + 1)) / cols;
+    const winH = 45;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = pad + c * (winW + pad);
+        const y = 110 + r * (winH + pad);
+        ctx.fillStyle = Math.random() > 0.3 ? '#ccfbf1' : '#134e4a';
+        ctx.fillRect(x, y, winW, winH);
+        ctx.strokeStyle = '#0f766e';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, winW, winH);
+      }
+    }
+
+    // Emergency Ambulance Bay Doors
+    ctx.fillStyle = '#ccfbf1';
+    ctx.fillRect(50, size - 120, size - 100, 110);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(50, size - 120, size - 100, 110);
+    ctx.fillStyle = '#ef4444';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🚑 EMERGENCY AMBULANCE BAY 🚑', size / 2, size - 60);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.hospital = texture;
+    return texture;
+  }
+
+  // 12. City Central Bank ("OPEN BANK 🏦") Facade Texture
+  getBankTexture() {
+    if (this.textures.bank) return this.textures.bank;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Marble granite texture
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, size, size);
+
+    // Gilded Classical Pediment Banner
+    ctx.fillStyle = '#d97706';
+    ctx.fillRect(30, 20, size - 60, 75);
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(30, 20, size - 60, 75);
+
+    ctx.fillStyle = '#fef08a';
+    ctx.font = 'bold 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('OPEN SQUARE BANK 🏦', size / 2, 46);
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('CENTRAL RESERVE & VAULT', size / 2, 74);
+
+    // Tall Bronze Vault Glass Windows
+    const winW = (size - 100) / 4;
+    for (let i = 0; i < 4; i++) {
+      const wx = 35 + i * (winW + 10);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(wx, 120, winW, 350);
+      ctx.strokeStyle = '#b45309';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(wx, 120, winW, 350);
+
+      // Gold security grill bars
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 2;
+      for (let gy = 140; gy < 460; gy += 30) {
+        ctx.beginPath();
+        ctx.moveTo(wx, gy);
+        ctx.lineTo(wx + winW, gy);
+        ctx.stroke();
+      }
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.bank = texture;
+    return texture;
+  }
+
+  // 13. Traditional Shinto Temple / Shrine ("⛩️ JINJA") Wall Texture
+  getTempleTexture() {
+    if (this.textures.temple) return this.textures.temple;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Aged cedar wood panels
+    ctx.fillStyle = '#3f2212';
+    ctx.fillRect(0, 0, size, size);
+
+    // Vermilion lacquered pillars & lintels
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(0, 0, size, 40);
+    ctx.fillRect(0, size - 40, size, 40);
+    ctx.fillRect(0, 0, 40, size);
+    ctx.fillRect(size - 40, 0, 40, size);
+
+    // Golden Imperial Chrysanthemum / Sakura Crest (Mon)
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, 60, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#3f2212';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, 35, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sacred White Paper Zigzags (Shide)
+    ctx.fillStyle = '#ffffff';
+    for (let s = 60; s < size - 60; s += 80) {
+      ctx.beginPath();
+      ctx.moveTo(s, 40);
+      ctx.lineTo(s + 18, 70);
+      ctx.lineTo(s + 6, 85);
+      ctx.lineTo(s + 24, 120);
+      ctx.lineTo(s + 12, 120);
+      ctx.lineTo(s - 6, 85);
+      ctx.lineTo(s + 6, 70);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.temple = texture;
+    return texture;
+  }
+
+  // 14. Colorful Neon Billboards for Skyscrapers
+  getBillboardTexture(type = 0) {
+    const key = `billboard_${type}`;
+    if (this.textures[key]) return this.textures[key];
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size / 2; // 2:1 widescreen billboard
+    const ctx = canvas.getContext('2d');
+
+    const ads = [
+      { bg: '#ec4899', title: '🌸 VIRTUAL IDOL LIVE', sub: 'TOKYO DOME 2026 · TICKETS ON SALE' },
+      { bg: '#06b6d4', title: '⚡ CYBER ENERGY DRINK', sub: 'SUPER BOOST YOUR SENSES · 0 CALORIES' },
+      { bg: '#8b5cf6', title: '🎮 NEO ANIME ARCADE', sub: 'VR MECHA FIGHTER 7 NOW PLAYING' }
+    ];
+    const ad = ads[type % ads.length];
+
+    ctx.fillStyle = ad.bg;
+    ctx.fillRect(0, 0, size, size / 2);
+
+    // Outer glow border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(6, 6, size - 12, size / 2 - 12);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 34px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ad.title, size / 2, 80);
+
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText(ad.sub, size / 2, 160);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures[key] = texture;
+    return texture;
+  }
 }
