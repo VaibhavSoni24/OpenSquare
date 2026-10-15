@@ -3,9 +3,6 @@ import * as THREE from 'three';
 export class AssetGenerator {
   constructor() {
     this.textures = {};
-    this.materials = {};
-
-    // 1. Generate Toon Gradient Map for Cel Shading
     this.toonGradient = this.createToonGradient();
   }
 
@@ -15,8 +12,8 @@ export class AssetGenerator {
     canvas.height = 1;
     const ctx = canvas.getContext('2d');
 
-    // 4 sharp anime shading steps
-    const colors = ['#555555', '#888888', '#bbbbbb', '#ffffff'];
+    // 4 sharp anime shading steps (smooth shadow to bright anime highlight)
+    const colors = ['#4a5568', '#718096', '#cbd5e1', '#ffffff'];
     colors.forEach((c, i) => {
       ctx.fillStyle = c;
       ctx.fillRect(i, 0, 1, 1);
@@ -28,7 +25,6 @@ export class AssetGenerator {
     return texture;
   }
 
-  // Create standard Toon Material with preset options
   createToonMaterial(color, options = {}) {
     return new THREE.MeshToonMaterial({
       color: new THREE.Color(color),
@@ -37,46 +33,73 @@ export class AssetGenerator {
     });
   }
 
-  // 2. Procedural Road Texture with Dashed Yellow Line and Crosswalk
+  // 1. High-Definition Crisp Anime Road Texture with Lane Arrows & Markings
   getRoadTexture() {
     if (this.textures.road) return this.textures.road;
 
-    const size = 512;
+    const size = 1024;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
 
-    // Dark charcoal anime asphalt
-    ctx.fillStyle = '#232733';
+    // Dark charcoal anime asphalt with soft cool tint
+    ctx.fillStyle = '#1e2330';
     ctx.fillRect(0, 0, size, size);
 
-    // Subtle asphalt grain
-    for (let i = 0; i < 1500; i++) {
+    // Subtle grain texture
+    for (let i = 0; i < 2500; i++) {
       const x = Math.random() * size;
       const y = Math.random() * size;
-      ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.06)';
-      ctx.fillRect(x, y, 2, 2);
+      ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.05)';
+      ctx.fillRect(x, y, 3, 3);
     }
 
-    // Outer white lane border lines
-    ctx.strokeStyle = '#f8f9fa';
-    ctx.lineWidth = 14;
+    // Outer white lane border lines (curbside line)
+    ctx.strokeStyle = '#f8fafc';
+    ctx.lineWidth = 20;
     ctx.beginPath();
-    ctx.moveTo(30, 0);
-    ctx.lineTo(30, size);
-    ctx.moveTo(size - 30, 0);
-    ctx.lineTo(size - 30, size);
+    ctx.moveTo(50, 0);
+    ctx.lineTo(50, size);
+    ctx.moveTo(size - 50, 0);
+    ctx.lineTo(size - 50, size);
     ctx.stroke();
 
-    // Center yellow dashed lines
-    ctx.strokeStyle = '#f1c40f';
-    ctx.lineWidth = 12;
-    ctx.setLineDash([48, 36]);
+    // Center double-yellow or dashed divider
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 14;
+    ctx.setLineDash([80, 50]);
     ctx.beginPath();
     ctx.moveTo(size / 2, 0);
     ctx.lineTo(size / 2, size);
     ctx.stroke();
+
+    // Painted Lane Direction Arrows (Northbound right lane, Southbound left lane)
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f8fafc';
+
+    // Helper for stylized road arrow
+    const drawArrow = (cx, cy, angle = 0) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, -60);
+      ctx.lineTo(24, -20);
+      ctx.lineTo(10, -20);
+      ctx.lineTo(10, 50);
+      ctx.lineTo(-10, 50);
+      ctx.lineTo(-10, -20);
+      ctx.lineTo(-24, -20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    };
+
+    // Right lane arrow
+    drawArrow(size * 0.72, size * 0.45, 0);
+    // Left lane arrow (reverse)
+    drawArrow(size * 0.28, size * 0.55, Math.PI);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
@@ -85,7 +108,7 @@ export class AssetGenerator {
     return texture;
   }
 
-  // 3. Crosswalk Texture
+  // 2. Crosswalk Texture with Tactile Paving
   getCrosswalkTexture() {
     if (this.textures.crosswalk) return this.textures.crosswalk;
 
@@ -95,16 +118,27 @@ export class AssetGenerator {
     canvas.height = size;
     const ctx = canvas.getContext('2d');
 
-    // Asphalt bg
-    ctx.fillStyle = '#232733';
+    // Asphalt base
+    ctx.fillStyle = '#1e2330';
     ctx.fillRect(0, 0, size, size);
 
-    // Bold white zebra bars
+    // Bold white zebra stripes
     ctx.fillStyle = '#ffffff';
-    const barWidth = 42;
-    const gap = 34;
-    for (let x = 20; x < size; x += barWidth + gap) {
-      ctx.fillRect(x, 40, barWidth, size - 80);
+    const barW = 46;
+    const gap = 38;
+    for (let x = 24; x < size; x += barW + gap) {
+      ctx.fillRect(x, 30, barW, size - 60);
+    }
+
+    // Yellow tactile dots row along sidewalk edge (Japanese road standard)
+    ctx.fillStyle = '#facc15';
+    for (let x = 15; x < size; x += 30) {
+      ctx.beginPath();
+      ctx.arc(x, 15, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, size - 15, 6, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -114,7 +148,7 @@ export class AssetGenerator {
     return texture;
   }
 
-  // 4. Anime Stylized Grass Texture with cute clover/flower specks
+  // 3. Anime Stylized Grass with Painterly Swirls
   getGrassTexture() {
     if (this.textures.grass) return this.textures.grass;
 
@@ -124,56 +158,56 @@ export class AssetGenerator {
     canvas.height = size;
     const ctx = canvas.getContext('2d');
 
-    // Base vibrant emerald green
-    const grad = ctx.createLinearGradient(0, 0, size, size);
-    grad.addColorStop(0, '#55c768');
-    grad.addColorStop(0.5, '#48b85b');
-    grad.addColorStop(1, '#5cd370');
+    // Multi-tone lush anime green
+    const grad = ctx.createRadialGradient(size / 2, size / 2, 40, size / 2, size / 2, size * 0.75);
+    grad.addColorStop(0, '#5eead4'); // Mint highlight
+    grad.addColorStop(0.3, '#4ade80'); // Emerald
+    grad.addColorStop(0.8, '#22c55e'); // Rich green
+    grad.addColorStop(1, '#16a34a'); // Shaded edge
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, size, size);
 
-    // Cute stylized grass tufts / brush strokes
-    for (let i = 0; i < 400; i++) {
+    // Painterly clover & grass strokes
+    for (let i = 0; i < 500; i++) {
       const x = Math.random() * size;
       const y = Math.random() * size;
-      ctx.strokeStyle = Math.random() > 0.4 ? '#6ee785' : '#3da64f';
+      ctx.strokeStyle = Math.random() > 0.4 ? '#86efac' : '#15803d';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x + (Math.random() * 8 - 4), y - (6 + Math.random() * 8));
+      ctx.lineTo(x + (Math.random() * 10 - 5), y - (8 + Math.random() * 10));
       ctx.stroke();
     }
 
-    // Mini cute flower daisies & buttercups
-    for (let i = 0; i < 60; i++) {
+    // Anime Flowers (Sakura blossoms & White daisies)
+    for (let i = 0; i < 70; i++) {
       const x = Math.random() * size;
       const y = Math.random() * size;
-      const flowerColor = ['#ffffff', '#ffd166', '#ffb7b2'][Math.floor(Math.random() * 3)];
+      const flowerColor = ['#ffffff', '#fef08a', '#fbcfe8', '#fed7aa'][Math.floor(Math.random() * 4)];
       ctx.fillStyle = flowerColor;
       for (let p = 0; p < 5; p++) {
         const ang = (p * Math.PI * 2) / 5;
         ctx.beginPath();
-        ctx.arc(x + Math.cos(ang) * 4, y + Math.sin(ang) * 4, 2.5, 0, Math.PI * 2);
+        ctx.arc(x + Math.cos(ang) * 5, y + Math.sin(ang) * 5, 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.fillStyle = '#f39c12';
+      ctx.fillStyle = '#f59e0b';
       ctx.beginPath();
-      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
       ctx.fill();
     }
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(24, 24);
+    texture.repeat.set(40, 40); // Repeat across island
     this.textures.grass = texture;
     return texture;
   }
 
-  // 5. Anime Skyscraper Facade Texture (Window Grids & Neon Signs)
-  getFacadeTexture(paletteType = 0) {
-    const key = `facade_${paletteType}`;
-    if (this.textures[key]) return this.textures[key];
+  // 4. Concrete Sidewalk with Japanese Pavers
+  getPavementTexture() {
+    if (this.textures.pavement) return this.textures.pavement;
 
     const size = 512;
     const canvas = document.createElement('canvas');
@@ -181,81 +215,11 @@ export class AssetGenerator {
     canvas.height = size;
     const ctx = canvas.getContext('2d');
 
-    const wallPalettes = [
-      { wall: '#34495e', winOn: '#ffeaa7', winOff: '#1e272e', accent: '#00d2d3' },
-      { wall: '#2c3e50', winOn: '#81ecec', winOff: '#131e2b', accent: '#ff7675' },
-      { wall: '#485460', winOn: '#fab1a0', winOff: '#1e272e', accent: '#fdcb6e' },
-      { wall: '#576574', winOn: '#a8ff78', winOff: '#222f3e', accent: '#54a0ff' }
-    ];
-    const pal = wallPalettes[paletteType % wallPalettes.length];
-
-    // Wall base
-    ctx.fillStyle = pal.wall;
+    ctx.fillStyle = '#e2e8f0';
     ctx.fillRect(0, 0, size, size);
 
-    // Window grid
-    const cols = 8;
-    const rows = 12;
-    const padX = 14;
-    const padY = 12;
-    const winW = (size - padX * (cols + 1)) / cols;
-    const winH = (size - padY * (rows + 1)) / rows;
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const x = padX + c * (winW + padX);
-        const y = padY + r * (winH + padY);
-
-        // Random window lights
-        const isLit = Math.random() > 0.4;
-        ctx.fillStyle = isLit ? pal.winOn : pal.winOff;
-        ctx.fillRect(x, y, winW, winH);
-
-        // Window frames
-        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, y, winW, winH);
-
-        // Window divider
-        ctx.beginPath();
-        ctx.moveTo(x + winW / 2, y);
-        ctx.lineTo(x + winW / 2, y + winH);
-        ctx.stroke();
-      }
-    }
-
-    // Commercial anime sign at the bottom
-    ctx.fillStyle = pal.accent;
-    ctx.fillRect(20, size - 45, size - 40, 35);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const brands = ['OPENSQUARE MALL', 'NEO CAFE ☕', 'ANIME ARCADE 🎮', 'KARAOKE 🎤', 'RAMEN ICHIBAN 🍜'];
-    ctx.fillText(brands[paletteType % brands.length], size / 2, size - 28);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    this.textures[key] = texture;
-    return texture;
-  }
-
-  // 6. Sidewalk Pavement Texture
-  getPavementTexture() {
-    if (this.textures.pavement) return this.textures.pavement;
-
-    const size = 256;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = '#cfd8dc';
-    ctx.fillRect(0, 0, size, size);
-
-    // Cobblestone / slab lines
-    ctx.strokeStyle = '#90a4ae';
+    // Grid of clean anime square paving slabs
+    ctx.strokeStyle = '#94a3b8';
     ctx.lineWidth = 3;
     const tileSize = 64;
     for (let x = 0; x <= size; x += tileSize) {
@@ -275,6 +239,312 @@ export class AssetGenerator {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     this.textures.pavement = texture;
+    return texture;
+  }
+
+  // 5. High-Rise Anime Commercial Facade Textures
+  getFacadeTexture(paletteType = 0) {
+    const key = `facade_${paletteType}`;
+    if (this.textures[key]) return this.textures[key];
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    const themes = [
+      { wall: '#1e293b', winOn: '#fef08a', winOff: '#0f172a', accent: '#06b6d4', brand: 'OPENSQUARE TOWER 🏢' },
+      { wall: '#334155', winOn: '#67e8f9', winOff: '#1e293b', accent: '#ec4899', brand: 'NEO ARCADE 🎮' },
+      { wall: '#1e1b4b', winOn: '#f472b6', winOff: '#0f172a', accent: '#a855f7', brand: 'CYBER CAFE ☕' },
+      { wall: '#3f3f46', winOn: '#fef9c3', winOff: '#18181b', accent: '#f59e0b', brand: 'SHIBUYA SOUNDS 🎧' }
+    ];
+    const theme = themes[paletteType % themes.length];
+
+    ctx.fillStyle = theme.wall;
+    ctx.fillRect(0, 0, size, size);
+
+    // Glowing window grid
+    const cols = 8;
+    const rows = 12;
+    const pad = 12;
+    const w = (size - pad * (cols + 1)) / cols;
+    const h = (size - 70 - pad * (rows + 1)) / rows;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = pad + c * (w + pad);
+        const y = pad + r * (h + pad);
+        const isLit = Math.random() > 0.45;
+        ctx.fillStyle = isLit ? theme.winOn : theme.winOff;
+        ctx.fillRect(x, y, w, h);
+
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, w, h);
+      }
+    }
+
+    // Commercial Neon Banner at ground level
+    ctx.fillStyle = theme.accent;
+    ctx.fillRect(16, size - 56, size - 32, 44);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(theme.brand, size / 2, size - 34);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    this.textures[key] = texture;
+    return texture;
+  }
+
+  // 6. Cute Anime Cafe Storefront Texture ("SAKURA CAFE")
+  getCafeTexture() {
+    if (this.textures.cafe) return this.textures.cafe;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Warm timber paneling
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(0, 0, size, size);
+
+    // Striped Awning at top
+    const stripes = 12;
+    const stripeW = size / stripes;
+    for (let s = 0; s < stripes; s++) {
+      ctx.fillStyle = s % 2 === 0 ? '#f43f5e' : '#fff1f2';
+      ctx.fillRect(s * stripeW, 0, stripeW, 80);
+    }
+
+    // Awning shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(0, 80, size, 14);
+
+    // Signboard
+    ctx.fillStyle = '#fffbeb';
+    ctx.fillRect(40, 100, size - 80, 50);
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(40, 100, size - 80, 50);
+    ctx.fillStyle = '#991b1b';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🌸 SAKURA CAFE & TEA ☕', size / 2, 126);
+
+    // Large glass bay windows
+    const winW = (size - 80) / 2;
+    [30, 30 + winW + 20].forEach(wx => {
+      ctx.fillStyle = '#e0f2fe';
+      ctx.fillRect(wx, 170, winW, 280);
+      ctx.strokeStyle = '#451a03';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(wx, 170, winW, 280);
+
+      // Window cross
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(wx + winW / 2, 170);
+      ctx.lineTo(wx + winW / 2, 450);
+      ctx.moveTo(wx, 310);
+      ctx.lineTo(wx + winW, 310);
+      ctx.stroke();
+
+      // Interior silhouette: coffee cups & plants
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(wx + 30, 430, 15, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Front door
+    ctx.fillStyle = '#92400e';
+    ctx.fillRect(size / 2 - 35, 230, 70, 220);
+    ctx.strokeStyle = '#fde68a';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(size / 2 - 28, 245, 56, 120);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.cafe = texture;
+    return texture;
+  }
+
+  // 7. Iconic Japanese Convenience Store ("OpenMart 🏪")
+  getConvenienceStoreTexture() {
+    if (this.textures.conbini) return this.textures.conbini;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Clean white paneling
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, size, size);
+
+    // Tri-color Japanese Convenience Store Signage Stripe (Cyan, Orange, Green)
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillRect(0, 20, size, 25);
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(0, 45, size, 25);
+    ctx.fillStyle = '#22c55e';
+    ctx.fillRect(0, 70, size, 25);
+
+    // Store Logo
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(40, 25, size - 80, 65);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🏪 OpenMart 24H', size / 2, 58);
+
+    // Full-height illuminated glass facade
+    ctx.fillStyle = '#f0fdf4';
+    ctx.fillRect(30, 130, size - 60, 340);
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(30, 130, size - 60, 340);
+
+    // Interior bright aisles & snacks
+    for (let a = 0; a < 4; a++) {
+      ctx.fillStyle = ['#f87171', '#60a5fa', '#facc15', '#4ade80'][a];
+      ctx.fillRect(50 + a * 105, 260, 85, 120);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(50 + a * 105, 380, 85, 15);
+    }
+
+    // Sliding automatic doors
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(size / 2 - 50, 200, 100, 270);
+    ctx.beginPath();
+    ctx.moveTo(size / 2, 200);
+    ctx.lineTo(size / 2, 470);
+    ctx.stroke();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.conbini = texture;
+    return texture;
+  }
+
+  // 8. Traditional Ramen Shop Front ("RAMEN ICHIBAN 🍜")
+  getRamenShopTexture() {
+    if (this.textures.ramen) return this.textures.ramen;
+
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Dark cedar wood
+    ctx.fillStyle = '#291e17';
+    ctx.fillRect(0, 0, size, size);
+
+    // Tiled eave roof
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, size, 70);
+
+    // Red hanging paper lanterns (Chochin)
+    [90, 200, 310, 420].forEach(lx => {
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(lx, 100, 28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('拉麺', lx, 100);
+    });
+
+    // Red Noren Curtains
+    const curtainCount = 5;
+    const cW = (size - 60) / curtainCount;
+    for (let c = 0; c < curtainCount; c++) {
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillRect(30 + c * cW + 4, 150, cW - 8, 120);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.textAlign = 'center';
+      const kanji = ['一', '番', 'ラ', 'ー', '麺'];
+      ctx.fillText(kanji[c], 30 + c * cW + cW / 2, 210);
+    }
+
+    // Wooden lower lattice
+    ctx.fillStyle = '#451a03';
+    ctx.fillRect(30, 280, size - 60, 200);
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 3;
+    for (let ly = 290; ly < 470; ly += 24) {
+      ctx.beginPath();
+      ctx.moveTo(30, ly);
+      ctx.lineTo(size - 30, ly);
+      ctx.stroke();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.ramen = texture;
+    return texture;
+  }
+
+  // 9. Japanese Beverage Vending Machine Texture
+  getVendingMachineTexture() {
+    if (this.textures.vending) return this.textures.vending;
+
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Vibrant Red / Blue vending casing
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(0, 0, size, size);
+
+    // Top logo
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('COLD DRINKS 🥤', size / 2, 30);
+
+    // Glass display panel
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(16, 45, size - 32, 130);
+
+    // Display rows of cute mini cans & bottles
+    const canColors = ['#f87171', '#60a5fa', '#facc15', '#4ade80', '#c084fc'];
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 5; col++) {
+        const cx = 28 + col * 42;
+        const cy = 60 + row * 60;
+        ctx.fillStyle = canColors[col % canColors.length];
+        ctx.fillRect(cx, cy, 26, 38);
+
+        // Price button (glowing green/blue)
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(cx + 4, cy + 42, 18, 8);
+      }
+    }
+
+    // Dispenser tray
+    ctx.fillStyle = '#18181b';
+    ctx.fillRect(24, size - 60, size - 48, 45);
+    ctx.strokeStyle = '#52525b';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(24, size - 60, size - 48, 45);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    this.textures.vending = texture;
     return texture;
   }
 }

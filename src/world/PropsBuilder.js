@@ -21,14 +21,12 @@ export class PropsBuilder {
     this.spawnTrafficSignalPoles();
   }
 
-  // 1. Instanced Street Lights along Downtown Avenues
+  // 1. Instanced Modern Anime Street Lights along Avenues & Roundabout
   spawnStreetLights() {
-    const count = 72;
-    // Pole
+    const count = 96;
     const poleGeo = new THREE.CylinderGeometry(0.12, 0.16, 7.5, 8);
     poleGeo.translate(0, 3.75, 0);
 
-    // Lamp Head fixture
     const headGeo = new THREE.BoxGeometry(0.8, 0.4, 1.4);
     headGeo.translate(0, 7.5, 0.6);
 
@@ -42,11 +40,29 @@ export class PropsBuilder {
     const dummy = new THREE.Object3D();
     let idx = 0;
 
-    // Place along Downtown roads
-    const avenues = [-90, 0, 90];
+    // A. Roundabout Perimeter Lamps (8 lamps around traffic circle)
+    for (let r = 0; r < 8; r++) {
+      if (idx >= count) break;
+      const ang = (r / 8) * Math.PI * 2;
+      const px = Math.cos(ang) * 44;
+      const pz = Math.sin(ang) * 44;
+      const py = this.terrain.getElevation(px, pz);
+
+      dummy.position.set(px, py, pz);
+      dummy.rotation.y = ang + Math.PI; // Face inward toward road
+      dummy.updateMatrix();
+
+      instancedPole.setMatrixAt(idx, dummy.matrix);
+      instancedHead.setMatrixAt(idx, dummy.matrix);
+      idx++;
+    }
+
+    // B. Downtown Streets & Avenues
+    const avenues = [-160, -90, -30, 0];
     avenues.forEach(x => {
-      for (let z = -100; z <= 100; z += 35) {
-        [-8.5, 8.5].forEach(dx => {
+      for (let z = -200; z <= 40; z += 40) {
+        if (Math.hypot(x, z) < 42) continue; // Skip inside roundabout
+        [-9.5, 9.5].forEach(dx => {
           if (idx >= count) return;
           const px = x + dx;
           const pz = z;
@@ -68,9 +84,9 @@ export class PropsBuilder {
     this.scene.add(instancedPole, instancedHead);
   }
 
-  // 2. Instanced Park & Sidewalk Benches
+  // 2. Instanced Benches in Central Park, Museum Plaza & Promenade
   spawnBenches() {
-    const count = 40;
+    const count = 50;
     const benchGeo = new THREE.BoxGeometry(2.4, 0.8, 1.0);
     benchGeo.translate(0, 0.4, 0);
     const benchMat = this.assetGen.createToonMaterial(0x854d0e);
@@ -80,14 +96,14 @@ export class PropsBuilder {
 
     for (let i = 0; i < count; i++) {
       let x, z;
-      if (i < 25) {
-        // Central Park paths
-        x = -170 + Math.random() * 80;
-        z = -170 + Math.random() * 80;
+      if (i < 30) {
+        // Central Park lake paths
+        x = -260 + Math.random() * 110;
+        z = -260 + Math.random() * 110;
       } else {
-        // Museum plaza & Promenade
-        x = 120 + Math.random() * 60;
-        z = -130 + Math.random() * 50;
+        // Museum plaza courtyard
+        x = 180 + Math.random() * 70;
+        z = -210 + Math.random() * 60;
       }
       const y = this.terrain.getElevation(x, z);
 
@@ -104,7 +120,7 @@ export class PropsBuilder {
 
   // 3. Cute Fire Hydrants along sidewalks
   spawnFireHydrants() {
-    const count = 28;
+    const count = 32;
     const hydrantGeo = new THREE.CylinderGeometry(0.25, 0.28, 1.0, 8);
     hydrantGeo.translate(0, 0.5, 0);
     const hydrantMat = this.assetGen.createToonMaterial(0xef4444);
@@ -114,6 +130,7 @@ export class PropsBuilder {
 
     for (let i = 0; i < count; i++) {
       const inter = this.roadNetwork.intersections[i % this.roadNetwork.intersections.length];
+      if (!inter) continue;
       const px = inter.x + 8.5;
       const pz = inter.z + (i % 2 === 0 ? 8.5 : -8.5);
       const py = this.terrain.getElevation(px, pz);
@@ -128,7 +145,7 @@ export class PropsBuilder {
     this.scene.add(instancedHydrant);
   }
 
-  // 4. Traffic Signal Poles at each Intersection
+  // 4. Traffic Signal Poles at Intersections
   spawnTrafficSignalPoles() {
     const inters = this.roadNetwork.intersections;
     const poleGeo = new THREE.CylinderGeometry(0.15, 0.18, 6.5, 8);
@@ -141,7 +158,7 @@ export class PropsBuilder {
 
     inters.forEach(inter => {
       const group = new THREE.Group();
-      group.position.set(inter.x + 7.5, inter.y, inter.z + 7.5);
+      group.position.set(inter.x + 8.5, inter.y, inter.z + 8.5);
 
       const pole = new THREE.Mesh(poleGeo, metalMat);
       pole.position.y = 3.25;

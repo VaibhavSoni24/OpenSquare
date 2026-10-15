@@ -8,14 +8,18 @@
 
 ## ✨ Features
 
-- 🏝️ **Expansive GTA-Style Open Island**
-  - **Downtown Skyline**: Lofty anime skyscrapers with neon signage, pedestrian crossings, and traffic intersections.
-  - **Sakura Residential District**: Cozy pastel suburban homes, blooming cherry blossom trees, picket fences, and stone paths.
-  - **Cultural Museum Plaza**: Neoclassical domed museum with Roman pillars, grand steps, outdoor sculptures, and fountains.
-  - **Verdant Central Park**: Lush rolling lawns, weeping willows, a scenic lake with an arched bridge, gazebo, and flower beds.
-  - **Coastal Promenade & Marina**: Palm-lined beach boulevard, docks with speedboats, and a clifftop coastal lighthouse.
+- 🏝️ **Expansive 1100m GTA-Style Open World Island**
+  - **Grand Central Roundabout**: A wide multi-lane traffic circle at the heart of the island with a landscaped fountain courtyard and palm trees.
+  - **Downtown Skyline**: Lofty anime skyscrapers with neon signage, glass skybridges, and broad arterial boulevards.
+  - **Shibuya Commercial Plaza**: Japanese cafes with outdoor dining patios and striped sun umbrellas (*Sakura Cafe & Tea ☕*), 24H convenience stores (*OpenMart 🏪*), ramen noodle shops (*Ramen Ichiban 🍜*), and street corner beverage vending machines.
+  - **Dense Sakura Residential District**: 40+ cozy Japanese suburban homes with pitched tile roofs, dormers, balconies, solar panels, AC units, gardens, and picket fences.
+  - **Cultural Museum Plaza**: Neoclassical domed museum with Roman pillars, stepped terrace, outdoor sculptures, and tiered water fountains.
+  - **Verdant Central Park**: Lush rolling lawns, weeping willows, a scenic lake with stone banks, an arched Japanese wooden bridge, and a pagoda gazebo.
+  - **Coastal Promenade & Clifftop Lighthouse**: 370m radius coastal highway loop, palm-lined beach promenade, marine breakwaters, and a clifftop maritime lighthouse.
   
-- 🚗 **Car NPC Traffic AI & Physics**
+- 🛣️ **Grounded Solid 3D Road Network**
+  - Continuous 3D solid asphalt beds, beveled concrete curbs, and textured pedestrian sidewalk slabs conforming seamlessly to the terrain (zero floating/levitating roads!).
+  - Multi-lane avenues, sweeping curved highways, crosswalks with tactile paving strips, and painted directional lane arrows.
   - Intelligent vehicle pathfinding across an interconnected multi-lane road network.
   - Traffic rules: Vehicle deceleration behind other cars, stops at red lights, yields to pedestrians.
   - Dynamic spawning bubble with spatial awareness for 60 FPS buttery-smooth performance.

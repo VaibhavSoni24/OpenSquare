@@ -4,10 +4,9 @@ export class IslandTerrain {
   constructor(scene, assetGen) {
     this.scene = scene;
     this.assetGen = assetGen;
-    this.size = 800; // 800x800m open world island
+    this.size = 1100; // Grand 1100x1100m open world map
     this.oceanMesh = null;
     this.islandMesh = null;
-    this.rocksMesh = null;
     this.beachesMesh = null;
 
     this.init();
@@ -16,17 +15,17 @@ export class IslandTerrain {
   init() {
     this.createOcean();
     this.createIslandBase();
-    this.createBeachesAndCliffs();
+    this.createBeaches();
+    this.createSeawalls();
   }
 
   createOcean() {
-    // Large expansive ocean plane
-    const oceanGeo = new THREE.PlaneGeometry(2400, 2400, 48, 48);
+    // Expansive ocean surrounding the island
+    const oceanGeo = new THREE.PlaneGeometry(3200, 3200, 64, 64);
     oceanGeo.rotateX(-Math.PI / 2);
 
-    // Cute stylized anime toon water material
     const oceanMat = new THREE.MeshToonMaterial({
-      color: 0x00b4d8,
+      color: 0x0ea5e9,
       gradientMap: this.assetGen.toonGradient,
       transparent: true,
       opacity: 0.88,
@@ -34,49 +33,22 @@ export class IslandTerrain {
     });
 
     this.oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
-    this.oceanMesh.position.y = -0.6; // Sea level
+    this.oceanMesh.position.y = -0.5; // Sea level
     this.oceanMesh.receiveShadow = true;
     this.scene.add(this.oceanMesh);
   }
 
   createIslandBase() {
-    // Stylized rounded island
-    const segments = 96;
+    const segments = 128;
     const islandGeo = new THREE.PlaneGeometry(this.size, this.size, segments, segments);
     islandGeo.rotateX(-Math.PI / 2);
 
     const pos = islandGeo.attributes.position;
-    const half = this.size / 2;
 
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
-
-      // Distance from center (squircle-like island shape)
-      const nx = x / half;
-      const nz = z / half;
-      const dist = Math.pow(Math.abs(nx), 3.2) + Math.pow(Math.abs(nz), 3.2);
-
-      let elevation = 0;
-      if (dist < 0.85) {
-        // Main island plateau with gentle rolling hills
-        const hill1 = Math.sin(x * 0.015) * Math.cos(z * 0.015) * 1.8;
-        const hill2 = Math.sin(x * 0.006 + 1.2) * Math.cos(z * 0.008) * 3.5;
-        elevation = 0.8 + hill1 + hill2;
-
-        // Elevated cliff near the north-east lighthouse
-        if (x > 180 && z < -180) {
-          elevation += 8.5;
-        }
-      } else if (dist < 1.0) {
-        // Coastline beach slope dipping into ocean
-        const factor = (1.0 - dist) / 0.15;
-        elevation = factor * 0.8;
-      } else {
-        // Underwater seabed drop
-        elevation = -3.5;
-      }
-
+      const elevation = this.getElevation(x, z);
       pos.setY(i, elevation);
     }
 
@@ -92,73 +64,87 @@ export class IslandTerrain {
     this.scene.add(this.islandMesh);
   }
 
-  createBeachesAndCliffs() {
-    // Sandy beach ring surrounding the green plateau
-    const beachGeo = new THREE.RingGeometry(this.size * 0.42, this.size * 0.52, 64);
+  createBeaches() {
+    // Golden sand ring outlining the island perimeter
+    const beachGeo = new THREE.RingGeometry(this.size * 0.40, this.size * 0.49, 96);
     beachGeo.rotateX(-Math.PI / 2);
 
     const sandMat = new THREE.MeshToonMaterial({
-      color: 0xfde047, // Warm golden anime sand
+      color: 0xfef08a, // Bright warm anime sand
       gradientMap: this.assetGen.toonGradient
     });
 
     this.beachesMesh = new THREE.Mesh(beachGeo, sandMat);
-    this.beachesMesh.position.y = -0.25;
+    this.beachesMesh.position.y = -0.15;
     this.beachesMesh.receiveShadow = true;
     this.scene.add(this.beachesMesh);
-
-    // Coastal seawalls & rocky breakwaters around the marina
-    const seaWallGeo = new THREE.BoxGeometry(120, 4, 8);
-    const stoneMat = new THREE.MeshToonMaterial({
-      color: 0x718096,
-      gradientMap: this.assetGen.toonGradient
-    });
-
-    const wall1 = new THREE.Mesh(seaWallGeo, stoneMat);
-    wall1.position.set(-240, 1.2, 180);
-    wall1.rotation.y = Math.PI / 4;
-    wall1.castShadow = true;
-    wall1.receiveShadow = true;
-    this.scene.add(wall1);
-
-    const wall2 = new THREE.Mesh(seaWallGeo, stoneMat);
-    wall2.position.set(-180, 1.2, 240);
-    wall2.rotation.y = -Math.PI / 4;
-    wall2.castShadow = true;
-    wall2.receiveShadow = true;
-    this.scene.add(wall2);
   }
 
-  // Sample ground height at (x, z) for physics raycasting & entity alignment
+  createSeawalls() {
+    // Marine breakwaters & stone promenades
+    const stoneMat = this.assetGen.createToonMaterial(0x64748b);
+    const wallGeo = new THREE.BoxGeometry(160, 4.5, 9);
+
+    const wall1 = new THREE.Mesh(wallGeo, stoneMat);
+    wall1.position.set(-360, 1.2, 260);
+    wall1.rotation.y = Math.PI / 3.8;
+    wall1.castShadow = true;
+    wall1.receiveShadow = true;
+
+    const wall2 = new THREE.Mesh(wallGeo, stoneMat);
+    wall2.position.set(-260, 1.2, 360);
+    wall2.rotation.y = -Math.PI / 4.2;
+    wall2.castShadow = true;
+    wall2.receiveShadow = true;
+
+    this.scene.add(wall1, wall2);
+  }
+
+  // Consistent elevation model: flat graded plains for city & roads, rolling hills elsewhere
   getElevation(x, z) {
     const half = this.size / 2;
     const nx = x / half;
     const nz = z / half;
-    const dist = Math.pow(Math.abs(nx), 3.2) + Math.pow(Math.abs(nz), 3.2);
+    // Squircle island boundary
+    const dist = Math.pow(Math.abs(nx), 3.0) + Math.pow(Math.abs(nz), 3.0);
 
     if (dist >= 1.0) {
-      return -0.5; // Water
+      return -4.0; // Deep ocean
     }
 
-    if (x > 180 && z < -180) {
-      return 9.2; // Lighthouse clifftop
+    // Coastal cliff / lighthouse mountain in North-East (x: 240~420, z: -420~-240)
+    const cliffDist = Math.hypot(x - 330, z + 330);
+    if (cliffDist < 160) {
+      const cliffFactor = Math.cos((cliffDist / 160) * (Math.PI / 2));
+      return 1.0 + cliffFactor * 18.0; // Dramatic ocean cliff up to 19m
     }
 
-    const hill1 = Math.sin(x * 0.015) * Math.cos(z * 0.015) * 1.8;
-    const hill2 = Math.sin(x * 0.006 + 1.2) * Math.cos(z * 0.008) * 3.5;
-    const base = 0.8 + hill1 + hill2;
-
-    if (dist > 0.85) {
-      const factor = (1.0 - dist) / 0.15;
-      return factor * base;
+    // Central Park Lake basin (x: -160~-260, z: -160~-260)
+    const lakeDist = Math.hypot(x - -210, z - -210);
+    if (lakeDist < 65) {
+      const lakeDepth = Math.cos((lakeDist / 65) * (Math.PI / 2)) * 1.5;
+      return 1.0 - lakeDepth; // Dips into pond
     }
-    return Math.max(0.6, base);
+
+    // Main city & residential area (radius < 380m) is graded flat at y = 1.0
+    // so all roads, buildings, intersections, and crosswalks sit flush on ground!
+    const r = Math.hypot(x, z);
+    if (r < 390) {
+      return 1.0;
+    }
+
+    // Coastal slope down to beach & ocean
+    if (dist < 0.82) {
+      return 1.0;
+    } else {
+      const factor = (1.0 - dist) / 0.18;
+      return Math.max(-0.6, factor * 1.0);
+    }
   }
 
   update(delta, time) {
-    // Gentle bobbing ocean wave animation
     if (this.oceanMesh) {
-      this.oceanMesh.position.y = -0.6 + Math.sin(time * 1.5) * 0.08;
+      this.oceanMesh.position.y = -0.5 + Math.sin(time * 1.6) * 0.08;
     }
   }
 }

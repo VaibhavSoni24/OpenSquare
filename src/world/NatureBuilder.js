@@ -21,17 +21,16 @@ export class NatureBuilder {
     this.spawnBushes();
   }
 
-  // 1. Instanced Sakura Cherry Blossom Trees
+  // 1. Instanced Blooming Sakura Cherry Blossom Trees
   spawnSakuraTrees() {
-    const count = 120;
-    const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 4.2, 7);
-    trunkGeo.translate(0, 2.1, 0);
+    const count = 180;
+    const trunkGeo = new THREE.CylinderGeometry(0.35, 0.55, 4.4, 7);
+    trunkGeo.translate(0, 2.2, 0);
 
-    const foliageGeo = new THREE.DodecahedronGeometry(2.8, 1);
-    foliageGeo.translate(0, 5.2, 0);
+    const foliageGeo = new THREE.DodecahedronGeometry(3.0, 1);
+    foliageGeo.translate(0, 5.4, 0);
 
-    // Merge trunk and foliage or render compound instancing
-    const sakuraMat = this.assetGen.createToonMaterial(0xffa8ba); // Soft sakura pink
+    const sakuraMat = this.assetGen.createToonMaterial(0xffa8ba); // Soft pastel sakura pink
     const trunkMat = this.assetGen.createToonMaterial(0x5c3d2e);
 
     const instancedFoliage = new THREE.InstancedMesh(foliageGeo, sakuraMat, count);
@@ -42,26 +41,20 @@ export class NatureBuilder {
     const dummy = new THREE.Object3D();
     let idx = 0;
 
-    // Sakura clusters: Residential area (X: 40~180, Z: 40~180), Museum (X: 120~200, Z: -180~-100)
     for (let i = 0; i < count; i++) {
       let x, z;
-      if (i < 80) {
-        // Residential Sakura street trees
-        x = 45 + Math.random() * 140;
-        z = 45 + Math.random() * 140;
+      if (i < 130) {
+        // Dense Sakura Residential streets & yards (x: 40~260, z: 40~260)
+        x = 45 + Math.random() * 210;
+        z = 45 + Math.random() * 210;
       } else {
-        // Museum plaza avenues
-        x = 110 + Math.random() * 80;
-        z = -180 + Math.random() * 70;
-      }
-
-      // Avoid road grid
-      if (Math.abs(x % 90) < 10 || Math.abs(z % 90) < 10) {
-        x += 12;
+        // Museum Grand Esplanade & Gardens (x: 160~280, z: -240~-140)
+        x = 160 + Math.random() * 120;
+        z = -240 + Math.random() * 100;
       }
 
       const y = this.terrain.getElevation(x, z);
-      const scale = 0.8 + Math.random() * 0.45;
+      const scale = 0.85 + Math.random() * 0.45;
 
       dummy.position.set(x, y, z);
       dummy.rotation.y = Math.random() * Math.PI * 2;
@@ -79,16 +72,16 @@ export class NatureBuilder {
     this.instancedSakuras = { foliage: instancedFoliage, trunk: instancedTrunk };
   }
 
-  // 2. Instanced Verdant Oak Trees (Central Park & Highlands)
+  // 2. Instanced Verdant Oak Trees (Central Park & Boulevard Medians)
   spawnOakTrees() {
-    const count = 100;
-    const trunkGeo = new THREE.CylinderGeometry(0.4, 0.6, 5, 8);
-    trunkGeo.translate(0, 2.5, 0);
+    const count = 150;
+    const trunkGeo = new THREE.CylinderGeometry(0.42, 0.65, 5.2, 8);
+    trunkGeo.translate(0, 2.6, 0);
 
-    const foliageGeo = new THREE.IcosahedronGeometry(3.2, 1);
-    foliageGeo.translate(0, 6.2, 0);
+    const foliageGeo = new THREE.IcosahedronGeometry(3.5, 1);
+    foliageGeo.translate(0, 6.4, 0);
 
-    const oakMat = this.assetGen.createToonMaterial(0x4ade80); // Vibrant leafy green
+    const oakMat = this.assetGen.createToonMaterial(0x4ade80);
     const trunkMat = this.assetGen.createToonMaterial(0x6b4f3b);
 
     const instancedFoliage = new THREE.InstancedMesh(foliageGeo, oakMat, count);
@@ -100,12 +93,12 @@ export class NatureBuilder {
     let idx = 0;
 
     for (let i = 0; i < count; i++) {
-      // Clustered around Central Park (X: -200~-80, Z: -200~-80)
-      const x = -200 + Math.random() * 120;
-      const z = -200 + Math.random() * 120;
+      // Clustered around Central Park (x: -300~-90, z: -300~-90)
+      const x = -290 + Math.random() * 190;
+      const z = -290 + Math.random() * 190;
 
       const y = this.terrain.getElevation(x, z);
-      const scale = 0.85 + Math.random() * 0.4;
+      const scale = 0.9 + Math.random() * 0.4;
 
       dummy.position.set(x, y, z);
       dummy.rotation.y = Math.random() * Math.PI * 2;
@@ -123,14 +116,14 @@ export class NatureBuilder {
     this.instancedOaks = { foliage: instancedFoliage, trunk: instancedTrunk };
   }
 
-  // 3. Coastal Palm Trees (Along Highway & Coastline)
+  // 3. Coastal Palm Trees (Along 370m Highway Loop & Beach Promenade)
   spawnPalmTrees() {
-    const count = 64;
-    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, 7, 6);
-    trunkGeo.translate(0, 3.5, 0);
+    const count = 96;
+    const trunkGeo = new THREE.CylinderGeometry(0.22, 0.38, 7.5, 6);
+    trunkGeo.translate(0, 3.75, 0);
 
-    const leafGeo = new THREE.ConeGeometry(2.8, 1.4, 6);
-    leafGeo.translate(0, 7.2, 0);
+    const leafGeo = new THREE.ConeGeometry(3.2, 1.6, 6);
+    leafGeo.translate(0, 7.8, 0);
 
     const palmMat = this.assetGen.createToonMaterial(0x22c55e);
     const trunkMat = this.assetGen.createToonMaterial(0xa16207);
@@ -143,15 +136,15 @@ export class NatureBuilder {
 
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
-      const r = 246; // Along coastal highway
+      const r = 368; // Along 370m Coastal Highway
       const x = Math.cos(angle) * r;
       const z = Math.sin(angle) * r;
       const y = this.terrain.getElevation(x, z);
 
       dummy.position.set(x, y, z);
       dummy.rotation.y = angle;
-      dummy.rotation.z = (Math.random() - 0.5) * 0.15; // Natural lean
-      dummy.scale.set(1, 1, 1);
+      dummy.rotation.z = (Math.sin(i * 1.5)) * 0.12; // Natural organic lean
+      dummy.scale.set(1.1, 1.1, 1.1);
       dummy.updateMatrix();
 
       instancedLeaf.setMatrixAt(i, dummy.matrix);
@@ -164,10 +157,10 @@ export class NatureBuilder {
     this.instancedPalms = { leaf: instancedLeaf, trunk: instancedTrunk };
   }
 
-  // 4. Instanced Bushes along Sidewalks
+  // 4. Instanced Bushes & Flower Shrubs along Sidewalks & Gardens
   spawnBushes() {
-    const count = 150;
-    const bushGeo = new THREE.SphereGeometry(1.2, 8, 8);
+    const count = 220;
+    const bushGeo = new THREE.SphereGeometry(1.3, 8, 8);
     const bushMat = this.assetGen.createToonMaterial(0x16a34a);
 
     const instancedBushes = new THREE.InstancedMesh(bushGeo, bushMat, count);
@@ -175,7 +168,7 @@ export class NatureBuilder {
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const dist = 30 + Math.random() * 200;
+      const dist = 35 + Math.random() * 280;
       const x = Math.cos(angle) * dist;
       const z = Math.sin(angle) * dist;
       const y = this.terrain.getElevation(x, z) + 0.4;
